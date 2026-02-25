@@ -87,6 +87,7 @@ const ServiceForm = ({ form, setForm, onSubmit, onClose, isEditing, categories }
                 required
                 min="15"
                 max="480"
+                step="15"
                 placeholder="60"
                 className="w-full px-6 py-4 bg-white/80 border border-transparent focus:border-brand focus:ring-2 focus:ring-brand/20 rounded-2xl outline-none transition-all font-black text-gray-900"
                 value={form.duration}
