@@ -30,12 +30,12 @@ const CategoryPage = () => {
   const handleDelete = async (id) => {
     toast((t) => (
       <div className="flex flex-col gap-4 p-1">
-        <p className="font-black text-gray-800 dark:text-white text-sm">Delete this category?</p>
+        <p className="font-black text-gray-800  text-sm">Delete this category?</p>
         <p className="text-xs text-gray-500">This action cannot be undone.</p>
         <div className="flex gap-2">
           <button
             onClick={() => toast.dismiss(t.id)}
-            className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-xl text-xs font-black uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors"
+            className="flex-1 px-4 py-2.5 bg-gray-100  text-xs font-black uppercase tracking-wider text-gray-600  hover:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
@@ -86,7 +86,7 @@ const CategoryPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F5E6DA] dark:bg-[#080808] transition-colors duration-500">
+    <div className="flex min-h-screen bg-[#F5E6DA]  transition-colors duration-500">
       <Toaster
         position="top-center"
         toastOptions={{
@@ -110,14 +110,14 @@ const CategoryPage = () => {
             <div>
               {/* Eyebrow */}
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-xl bg-brand/15 dark:bg-brand/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-brand/15  flex items-center justify-center">
                   <LayoutGrid className="w-4 h-4 text-brand" />
                 </div>
                 <span className="text-[10px] font-black text-brand uppercase tracking-[3px]">Lough Skin Admin</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900  tracking-tighter leading-none">
                 Product{' '}
-                <span className="text-[#B62025] dark:text-[#FF4B4B]">Categories</span>
+                <span className="text-[#22B8C8] ">Categories</span>
               </h1>
               <div className="flex items-center gap-2 mt-3">
                 <div className="w-8 h-[2px] bg-brand rounded-full"></div>
@@ -137,7 +137,7 @@ const CategoryPage = () => {
           </div>
 
           {/* ── Table Card ── */}
-          <div className="bg-white/70 dark:bg-gray-900/40 backdrop-blur-md rounded-[32px] shadow-2xl shadow-brand-soft/20 dark:shadow-black/40 border border-white dark:border-white/5 overflow-hidden">
+          <div className="bg-white/70  backdrop-blur-md rounded-[32px] shadow-2xl shadow-brand-soft/20  border-white  overflow-hidden">
 
             {/* Mobile scroll hint — visible only on small screens */}
             <div className="flex items-center gap-2 px-6 pt-5 pb-0 sm:hidden">
@@ -149,12 +149,12 @@ const CategoryPage = () => {
               <table className="w-full text-left border-collapse" style={{ minWidth: '640px' }}>
 
                 {/* Table Head */}
-                <thead className="bg-[#F5EDE4]/60 dark:bg-black/30 border-b border-brand-soft/20 dark:border-white/5">
+                <thead className="bg-[#F5EDE4]/60 border-b border-brand-soft/20 ">
                   <tr>
                     {['Order', 'Category Name', 'Description', 'Status', 'Actions'].map((h, i) => (
                       <th
                         key={h}
-                        className={`px-8 py-6 text-[10px] uppercase tracking-[3px] font-black text-gray-400 dark:text-gray-600 whitespace-nowrap ${i === 3 ? 'text-center' : i === 4 ? 'text-right' : ''}`}
+                        className={`px-8 py-6 text-[10px] uppercase tracking-[3px] font-black text-gray-400  whitespace-nowrap ${i === 3 ? 'text-center' : i === 4 ? 'text-right' : ''}`}
                       >
                         {h}
                       </th>
@@ -163,7 +163,7 @@ const CategoryPage = () => {
                 </thead>
 
                 {/* Table Body */}
-                <tbody className="divide-y divide-gray-100/60 dark:divide-white/5">
+                <tbody className="divide-y divide-gray-100/60 ">
                   {loading ? (
                     <tr>
                       <td colSpan="5" className="py-32">
@@ -190,12 +190,12 @@ const CategoryPage = () => {
                     <tr>
                       <td colSpan="5" className="py-24 text-center">
                         <div className="flex flex-col items-center gap-4">
-                          <div className="w-16 h-16 rounded-2xl bg-brand/10 dark:bg-brand/5 flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
                             <LayoutGrid className="w-7 h-7 text-brand/40" />
                           </div>
                           <div>
-                            <p className="font-black text-gray-400 dark:text-gray-600 uppercase tracking-[3px] text-xs">No categories yet</p>
-                            <p className="text-gray-300 dark:text-gray-700 text-xs mt-1">Click "Create New" to add your first one</p>
+                            <p className="font-black text-gray-400  uppercase tracking-[3px] text-xs">No categories yet</p>
+                            <p className="text-gray-300  text-xs mt-1">Click "Create New" to add your first one</p>
                           </div>
                         </div>
                       </td>
@@ -207,11 +207,11 @@ const CategoryPage = () => {
 
             {/* Footer stripe */}
             {!loading && categories.length > 0 && (
-              <div className="px-8 py-4 bg-[#F5EDE4]/40 dark:bg-black/20 border-t border-brand-soft/20 dark:border-white/5 flex items-center justify-between">
-                <span className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[2px]">
+              <div className="px-8 py-4 bg-[#F5EDE4]/40  border-t border-brand-soft/20  flex items-center justify-between">
+                <span className="text-[10px] font-black text-gray-400  uppercase tracking-[2px]">
                   Total: {categories.length}
                 </span>
-                <span className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[2px]">
+                <span className="text-[10px] font-black text-gray-400  uppercase tracking-[2px]">
                   Active: {categories.filter(c => c.isActive).length}
                 </span>
               </div>
