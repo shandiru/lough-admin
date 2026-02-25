@@ -14,6 +14,7 @@ import CustomerDashboard from './pages/dashboard/StaffDashboard';
 import ForgotPasswordPage from './pages/Forgotpasswordpage';
 import ResetPasswordPage from './pages/ResetPasswordPages';
 import CategoryPage from './pages/CategoryPage';
+import ServicePage from './pages/Servicepage';
 const App = () => {
   return (
     <BrowserRouter>
@@ -40,6 +41,14 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <CategoryPage />
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/dashboard/admin/service"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ServicePage />
               </ProtectedRoute>
             }
           />
