@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import SilentRefresh from './components/SilentRefresh';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import PublicRoute from './components/PublicRoute'
 import RegisterPage from './pages/RegisterPage';
 import SetupPasswordPage from './pages/SetupPasswordPage';
 import LoginPage from './pages/LoginPage';
@@ -21,12 +21,11 @@ const App = () => {
       <SilentRefresh>
         <Routes>
           {/* Public */}
-          <Route path="/register"        element={<RegisterPage />} />
-          <Route path="/setup-password"  element={<SetupPasswordPage />} />
-          <Route path="/login"           element={<LoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password"  element={<ResetPasswordPage />} />
-
+         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+<Route path="/setup-password" element={<PublicRoute><SetupPasswordPage /></PublicRoute>} />
+<Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+<Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+<Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
           {/* Admin */}
           <Route path="/dashboard/admin" element={
             <ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>
