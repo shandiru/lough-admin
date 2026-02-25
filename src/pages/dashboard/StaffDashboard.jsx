@@ -1,21 +1,41 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from "../../hooks/useAuth";
+import Sidebar from '../../components/Sidebar';
+import { useAuth } from '../../hooks/useAuth';
 
-// allowedRoles: array like ['admin'] or ['admin', 'customer']
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, role } = useAuth();
+const StaffDashboard = () => {
+  const { user } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  return (
+    
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#F5E6DA]">
+      
+     
+      <Sidebar />
 
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    // Role not allowed — redirect to their own dashboard
-    return <Navigate to={role === 'admin' ? '/dashboard/admin' : '/dashboard/customer'} replace />;
-  }
+     
+      <main className="flex-1 p-6 lg:p-12 flex flex-col items-start justify-start">
+        
+       
+        <div className="mb-4">
+          <span className="px-3 py-1 rounded-full bg-[var(--color-brand)] text-white text-[10px] md:text-xs font-bold uppercase tracking-widest shadow-sm">
+            Staff
+          </span>
+        </div>
 
-  return children;
+     
+        <div className="w-full">
+        
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight break-words">
+            Welcome, {user?.name }
+          </h1>
+        </div>
+
+      
+        <div className="w-16 md:w-24 h-1 bg-[var(--color-brand)] mt-6 md:mt-8 rounded-full opacity-50"></div>
+
+      </main>
+    </div>
+  );
 };
 
-export default ProtectedRoute;
+export default StaffDashboard;

@@ -33,7 +33,7 @@ const LoginPage = () => {
       if (user.role === "admin") {
         navigate("/dashboard/admin");
       } else {
-        navigate("/dashboard/customer");
+        navigate("/dashboard/staff");
       }
     } catch (err) {
       const errMsg =

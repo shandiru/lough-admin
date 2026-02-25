@@ -12,8 +12,8 @@ import StaffDashboard from './pages/dashboard/StaffDashboard';
 import ForgotPasswordPage from './pages/Forgotpasswordpage';
 import ResetPasswordPage from './pages/ResetPasswordPages';
 import CategoryPage from './pages/CategoryPage';
-import ServicePage from './pages/ServicePage';
-import StaffPage from './pages/StaffPage';
+import ServicePage from './pages/Servicepage';
+import StaffPage from './pages/Staffpage';
 
 const App = () => {
   return (
