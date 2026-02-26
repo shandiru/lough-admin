@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-// Service function-ai import seiyavum
+
 import { resetPasswordConfirm } from "../api/services";
 
 const ResetPasswordPage = () => {

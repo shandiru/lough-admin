@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
+// Service function-ai import seiyavum
+import { requestPasswordReset } from "../api/services";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -33,15 +34,16 @@ const ForgotPasswordPage = () => {
     setMessage("");
 
     try {
-      const res = await axiosInstance.post("/auth/reset-password", { email });
+      // API call using the service
+      const res = await requestPasswordReset(email);
+      
       setStatus("success");
-      setMessage(res.data.message || "Reset link sent! Check your email.");
+      setMessage(res.message || "Reset link sent! Check your email.");
       startCountdown();
     } catch (err) {
       setStatus("error");
-      setMessage(
-        err.response?.data?.message || "Something went wrong. Try again."
-      );
+      // Service-il irundhu vara error string-ai set panrom
+      setMessage(err);
     }
   };
 

@@ -46,3 +46,14 @@ export const resetPasswordConfirm = async (data) => {
     throw error.response?.data?.message || "Reset failed. Link may have expired.";
   }
 };
+
+
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/reset-password`, { email });
+    return response.data;
+  } catch (error) {
+  
+    throw error.response?.data?.message || "Something went wrong. Try again.";
+  }
+};
