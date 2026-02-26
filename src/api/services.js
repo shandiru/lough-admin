@@ -35,3 +35,14 @@ export const loginUser = async (credentials) => {
     throw error.response?.data?.message || "Login failed. Please try again.";
   }
 };
+
+
+export const resetPasswordConfirm = async (data) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/reset-password-confirm`, data);
+    return response.data;
+  } catch (error) {
+    
+    throw error.response?.data?.message || "Reset failed. Link may have expired.";
+  }
+};

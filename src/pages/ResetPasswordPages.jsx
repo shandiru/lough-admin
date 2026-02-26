@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
+// Service function-ai import seiyavum
+import { resetPasswordConfirm } from "../api/services";
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
@@ -49,25 +50,24 @@ const ResetPasswordPage = () => {
     setMessage("");
 
     try {
-      const res = await axiosInstance.post("/auth/reset-password-confirm", {
+      // API call using the service
+      const res = await resetPasswordConfirm({
         token,
         email,
         newPassword: form.newPassword,
       });
 
       setStatus("success");
-      setMessage(res.data.message || "Password reset successfully!");
+      setMessage(res.message || "Password reset successfully!");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setStatus("error");
-      setMessage(
-        err.response?.data?.message ||
-          "Reset failed. Link may have expired."
-      );
+      // catch-il varum string-ai message-aga set seiyavum
+      setMessage(err);
     }
   };
 
-  // Strength checker
+  // Strength checker logic
   const passwordStrength = (pass) => {
     if (!pass) return 0;
     let score = 0;
@@ -100,7 +100,7 @@ const ResetPasswordPage = () => {
           </p>
         </div>
 
-        {/* Email */}
+        {/* Email - Read Only */}
         <div className="mb-6">
           <label className="block text-sm text-brand mb-1">
             Email
@@ -197,6 +197,7 @@ const ResetPasswordPage = () => {
               )}
           </div>
 
+          {/* Status Messages */}
           {message && (
             <div
               className={`text-sm p-3 rounded-lg ${
@@ -209,6 +210,7 @@ const ResetPasswordPage = () => {
             </div>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={
