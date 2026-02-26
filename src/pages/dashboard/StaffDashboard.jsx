@@ -1,16 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../hooks/useAuth';
 import axiosInstance from '../../api/axiosInstance';
 import toast, { Toaster } from 'react-hot-toast';
-import {
-  CalendarDays, Link2Off, ExternalLink,
-  RefreshCw, CheckCircle2, AlertTriangle,
-  Loader2, Sparkles
-} from 'lucide-react';
+import { CalendarDays, CheckCircle2, Loader2 } from 'lucide-react';
 
-// ─── Google G Logo SVG ────────────────────────────────────────────────────────
 const GoogleLogo = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -20,195 +15,36 @@ const GoogleLogo = ({ size = 20 }) => (
   </svg>
 );
 
-// ─── Google Calendar Integration Card ────────────────────────────────────────
-const GoogleCalendarCard = ({ gcalData, onRefresh }) => {
-  const [connecting,    setConnecting]    = useState(false);
-  const [disconnecting, setDisconnecting] = useState(false);
+const GoogleCalendarCard = ({ isConnected, onConnect, connecting }) => {
 
-  const status     = gcalData?.googleCalendarSyncStatus?.status || 'disconnected';
-  const lastSync   = gcalData?.googleCalendarSyncStatus?.lastSync;
-  const errMsg     = gcalData?.googleCalendarSyncStatus?.errorMessage;
-  const calId      = gcalData?.googleCalendarId;
-  const isConnected = status === 'connected';
-  const isError     = status === 'error';
 
-  // ── STEP 1: Request OAuth URL from backend → redirect browser to Google ──
-  const handleConnect = async () => {
-    setConnecting(true);
-    try {
-      const res = await axiosInstance.get('/google/auth-url');
-      // Full page redirect — Google will redirect back to /api/google/callback
-      window.location.href = res.data.url;
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not start Google sign-in. Try again.');
-      setConnecting(false);
-    }
-  };
-
-  // ── Disconnect with confirmation toast ──
-  const handleDisconnect = () => {
-    toast(t => (
-      <div className="flex flex-col gap-3 p-1">
-        <p className="font-black text-gray-800 text-sm">Disconnect Google Calendar?</p>
-        <p className="text-xs text-gray-500">Appointments will no longer sync automatically.</p>
-        <div className="flex gap-2 mt-1">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="flex-1 px-3 py-2.5 bg-gray-100 rounded-xl text-xs font-black text-gray-600 hover:bg-gray-200 transition-colors uppercase tracking-wider"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              setDisconnecting(true);
-              try {
-                await axiosInstance.delete('/google/disconnect');
-                toast.success('Google Calendar disconnected');
-                onRefresh();
-              } catch {
-                toast.error('Failed to disconnect. Please try again.');
-              } finally {
-                setDisconnecting(false);
-              }
-            }}
-            className="flex-1 px-3 py-2.5 bg-[#B62025] text-white rounded-xl text-xs font-black hover:bg-[#9a1a1e] transition-colors uppercase tracking-wider"
-          >
-            Disconnect
-          </button>
-        </div>
-      </div>
-    ), { duration: 12000 });
-  };
-
-  // ════════════════════════════════════
-  //  CONNECTED UI
-  // ════════════════════════════════════
   if (isConnected) {
     return (
       <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/60 p-7 shadow-xl">
-        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-emerald-100/50 pointer-events-none" />
-
-        <div className="relative">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-white shadow-md shadow-emerald-100 flex items-center justify-center">
-                <GoogleLogo size={22} />
-              </div>
-              <div>
-                <p className="font-black text-gray-800 text-sm">Google Calendar</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[2px]">Connected</span>
-                </div>
-              </div>
-            </div>
-            {lastSync && (
-              <span className="text-[9px] text-gray-400 font-bold text-right leading-relaxed">
-                Last sync<br />
-                {new Date(lastSync).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
-              </span>
-            )}
-          </div>
-
-          {/* Calendar ID pill */}
-          {calId && (
-            <div className="flex items-center gap-2 bg-white/70 rounded-xl px-4 py-3 mb-5">
-              <CalendarDays className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <span className="text-xs font-medium text-gray-600 truncate flex-1">{calId}</span>
-              <a
-                href="https://calendar.google.com/calendar/r"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Open Google Calendar"
-                className="shrink-0 p-1 rounded-lg hover:bg-emerald-100 text-emerald-400 hover:text-emerald-600 transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          )}
-
-          {/* Feature checks */}
-          <div className="space-y-2 mb-6">
-            {[
-              'New bookings auto-sync to your calendar',
-              'Google Calendar reminders are active',
-              'Access your schedule from any device',
-            ].map((f, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span className="text-xs text-gray-600 font-medium">{f}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={onRefresh}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-white/80 hover:bg-white text-gray-500 hover:text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100 transition-all"
-            >
-              <RefreshCw className="w-3 h-3" /> Refresh
-            </button>
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnecting}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-white/80 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100 transition-all disabled:opacity-50"
-            >
-              {disconnecting
-                ? <span className="w-3 h-3 border-2 border-red-200 border-t-red-400 rounded-full animate-spin" />
-                : <Link2Off className="w-3 h-3" />
-              }
-              Disconnect
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ════════════════════════════════════
-  //  ERROR UI
-  // ════════════════════════════════════
-  if (isError) {
-    return (
-      <div className="rounded-[28px] bg-red-50 border border-red-100 p-7 shadow-xl">
-        <div className="flex items-start gap-3 mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-12 h-12 rounded-2xl bg-white shadow-md shadow-emerald-100 flex items-center justify-center">
             <GoogleLogo size={22} />
           </div>
           <div>
             <p className="font-black text-gray-800 text-sm">Google Calendar</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-[10px] font-black text-red-500 uppercase tracking-[2px]">Sync Error</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[2px]">Connected</span>
             </div>
           </div>
         </div>
-        {errMsg && (
-          <div className="flex items-start gap-2 bg-red-100/60 rounded-xl px-4 py-3 mb-5">
-            <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
-            <span className="text-xs text-red-600 font-medium">{errMsg}</span>
-          </div>
-        )}
-        <button
-          onClick={handleConnect}
-          disabled={connecting}
-          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 hover:border-red-200 hover:bg-red-50/50 text-gray-700 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-60"
-        >
-          {connecting
-            ? <><span className="w-4 h-4 border-2 border-gray-200 border-t-[#4285F4] rounded-full animate-spin" /> Connecting...</>
-            : <><GoogleLogo size={18} /> Reconnect Google Calendar</>
-          }
-        </button>
+
+        <div className="flex items-center gap-2 bg-white/70 rounded-xl px-4 py-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          <span className="text-sm text-gray-600 font-medium">
+            Your Google Calendar is already connected. Appointments will sync automatically.
+          </span>
+        </div>
       </div>
     );
   }
 
-  // ════════════════════════════════════
-  //  DISCONNECTED UI (default)
-  // ════════════════════════════════════
+
   return (
     <div className="relative overflow-hidden rounded-[28px] bg-white/70 backdrop-blur-md border border-white p-7 shadow-xl">
       <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-[var(--color-brand)]/5 pointer-events-none" />
@@ -229,27 +65,13 @@ const GoogleCalendarCard = ({ gcalData, onRefresh }) => {
         </div>
 
         {/* Description */}
-        <p className="text-sm text-gray-500 leading-relaxed mb-5">
-          Connect your Google account to automatically sync your Lough Skin appointments with your personal calendar.
+        <p className="text-sm text-gray-500 leading-relaxed mb-7">
+          Connect your Google account to automatically sync your appointments with your personal calendar.
         </p>
 
-        {/* Feature list */}
-        <div className="space-y-2.5 mb-7">
-          {[
-            'Auto-sync bookings to Google Calendar',
-            'Get reminders for upcoming appointments',
-            'Access your schedule from any device',
-          ].map((f, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] shrink-0" />
-              <span className="text-xs text-gray-500 font-medium">{f}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ✅ MAIN CONNECT BUTTON */}
+        {/* Connect Button */}
         <button
-          onClick={handleConnect}
+          onClick={onConnect}
           disabled={connecting}
           className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 hover:shadow-lg text-gray-700 py-4 rounded-2xl font-black text-sm transition-all active:scale-[0.98] disabled:opacity-60 group"
         >
@@ -276,37 +98,47 @@ const GoogleCalendarCard = ({ gcalData, onRefresh }) => {
   );
 };
 
-// ─── Main Staff Dashboard Page ────────────────────────────────────────────────
-const StaffDashboard = () => {
-  const { user }         = useAuth();
-  const [searchParams]   = useSearchParams();
-  const [gcalData, setGcalData] = useState(null);
-  const [loading,  setLoading]  = useState(true);
 
-  // ── Handle OAuth redirect result (?gcal=success|denied|error) ──
+const StaffDashboard = () => {
+  const { user }       = useAuth();
+  const [searchParams] = useSearchParams();
+  const [isConnected, setIsConnected] = useState(false);
+  const [loading,     setLoading]     = useState(true);
+  const [connecting,  setConnecting]  = useState(false);
+
+
   useEffect(() => {
     const gcal = searchParams.get('gcal');
-    if (gcal === 'success') toast.success('Google Calendar connected successfully! 🎉', { duration: 4000 });
-    if (gcal === 'denied')  toast.error('Google Calendar access was denied.',           { duration: 4000 });
+    if (gcal === 'success') toast.success('Google Calendar connected successfully! ', { duration: 4000 });
+    if (gcal === 'denied')  toast.error('Google Calendar access was denied.',            { duration: 4000 });
     if (gcal === 'error')   toast.error('Google Calendar connection failed. Try again.', { duration: 4000 });
   }, []);
 
-  // ── Fetch staff profile to get current gcal status ──
-  const fetchGcalStatus = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.get('/staff/me');
-      setGcalData(res.data);
-    } catch {
-      setGcalData(null);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const checkStatus = async () => {
+      setLoading(true);
+      try {
+        const res = await axiosInstance.get('/staff/getGoogleCalenderStatus');
+        setIsConnected(res.data === true);
+      } catch {
+        setIsConnected(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkStatus();
   }, []);
 
-  useEffect(() => { fetchGcalStatus(); }, [fetchGcalStatus]);
-
-  const gcalStatus = gcalData?.googleCalendarSyncStatus?.status || 'disconnected';
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      const res = await axiosInstance.get('/google/auth-url');
+      window.location.href = res.data.url;
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not start Google sign-in. Try again.');
+      setConnecting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#F5E6DA]">
@@ -361,24 +193,14 @@ const StaffDashboard = () => {
               <span className="text-xs font-black text-gray-400 uppercase tracking-[2px]">Loading...</span>
             </div>
           ) : (
-            <GoogleCalendarCard gcalData={gcalData} onRefresh={fetchGcalStatus} />
-          )}
-
-          {/* Hint text below card */}
-          {!loading && gcalStatus === 'connected' && (
-            <div className="flex items-center gap-2 mt-3 px-1">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <span className="text-xs text-emerald-600 font-bold">
-                Your appointments will appear in Google Calendar automatically
-              </span>
-            </div>
-          )}
-          {!loading && gcalStatus === 'disconnected' && (
-            <p className="text-[10px] text-gray-400 font-medium mt-3 px-1">
-              Connect once — stays connected until you choose to disconnect
-            </p>
+            <GoogleCalendarCard
+              isConnected={isConnected}
+              onConnect={handleConnect}
+              connecting={connecting}
+            />
           )}
         </div>
+
       </main>
     </div>
   );
