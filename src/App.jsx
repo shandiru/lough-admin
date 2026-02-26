@@ -21,29 +21,29 @@ const App = () => {
       <SilentRefresh>
         <Routes>
           {/* Public */}
-         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-<Route path="/setup-password" element={<PublicRoute><SetupPasswordPage /></PublicRoute>} />
-<Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-<Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
-<Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          <Route path="/setup-password" element={<PublicRoute><SetupPasswordPage /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+          <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
           {/* Admin */}
           <Route path="/dashboard/admin" element={
             <ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>
-          }/>
+          } />
           <Route path="/dashboard/admin/category" element={
             <ProtectedRoute allowedRoles={['admin']}><CategoryPage /></ProtectedRoute>
-          }/>
+          } />
           <Route path="/dashboard/admin/service" element={
             <ProtectedRoute allowedRoles={['admin']}><ServicePage /></ProtectedRoute>
-          }/>
+          } />
           <Route path="/dashboard/admin/staff" element={
             <ProtectedRoute allowedRoles={['admin']}><StaffPage /></ProtectedRoute>
-          }/>
+          } />
 
           {/* Staff */}
           <Route path="/dashboard/staff" element={
             <ProtectedRoute allowedRoles={['staff', 'admin']}><StaffDashboard /></ProtectedRoute>
-          }/>
+          } />
 
           {/* Fallback */}
           <Route path="/" element={<Navigate to="/login" replace />} />
