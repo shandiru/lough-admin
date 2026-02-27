@@ -1,38 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import toast, { Toaster } from 'react-hot-toast';
+import { CalendarDays, Loader2 } from 'lucide-react';
+
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../hooks/useAuth';
 import { googleCalendarApi } from '../../api/googleCalendar';
-import toast, { Toaster } from 'react-hot-toast';
-import { CalendarDays, Loader2 } from 'lucide-react';
-import GoogleCalendarCard from '../../components/Google/GoogleCalendarCard'
+import GoogleCalendarCard from '../../components/Google/GoogleCalendarCard';
 
 const StaffDashboard = () => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    const gcal = searchParams.get('gcal');
-    if (gcal === 'success') toast.success('Calendar connected!');
-    if (gcal === 'denied') toast.error('Access denied.');
-    if (gcal === 'error') toast.error('Connection failed.');
-    
-    checkStatus();
-  }, [searchParams]);
+    const checkStatus = async () => {
+      try {
+        const status = await googleCalendarApi.getStatus();
+        setIsConnected(status);
+      } catch {
+        setIsConnected(false);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const checkStatus = async () => {
-    try {
-      const status = await googleCalendarApi.getStatus();
-      setIsConnected(status);
-    } catch {
-      setIsConnected(false);
-    } finally {
-      setLoading(false);
+    // Handle Toast Messages & URL Cleanup (Prevents double toast)
+    const gcal = searchParams.get('gcal');
+    if (gcal) {
+      if (gcal === 'success') toast.success('Calendar connected!');
+      if (gcal === 'denied') toast.error('Access denied.');
+      if (gcal === 'error') toast.error('Connection failed.');
+      
+      // URL-la irunthu ?gcal=... parameters-ah remove pannum
+      searchParams.delete('gcal');
+      setSearchParams(searchParams);
     }
-  };
+
+    checkStatus();
+  }, []); // Only runs on mount
 
   const handleConnect = async () => {
     setActionLoading(true);
@@ -46,37 +55,67 @@ const StaffDashboard = () => {
   };
 
   const handleDisconnect = async () => {
-    if (!window.confirm("Disconnect Google Calendar? Appointments will stop syncing.")) return;
-    
-    setActionLoading(true);
-    try {
-      await googleCalendarApi.disconnect();
-      setIsConnected(false);
-      toast.success('Calendar disconnected successfully');
-    } catch (err) {
-      toast.error('Failed to disconnect');
-    } finally {
-      setActionLoading(false);
+    // SweetAlert2 Confirmation Modal
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "Appointments will stop syncing to your Google Calendar.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444', // Tailwind red-500
+      cancelButtonColor: '#6b7280',  // Tailwind gray-500
+      confirmButtonText: 'Yes, disconnect!',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      background: '#fff',
+      customClass: {
+        popup: 'rounded-[28px] p-8',
+        confirmButton: 'rounded-2xl px-6 py-3 font-bold text-sm',
+        cancelButton: 'rounded-2xl px-6 py-3 font-bold text-sm'
+      }
+    });
+
+    if (result.isConfirmed) {
+      setActionLoading(true);
+      try {
+        await googleCalendarApi.disconnect();
+        setIsConnected(false);
+        
+        Swal.fire({
+          title: 'Unlinked!',
+          text: 'Google Calendar has been disconnected.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          customClass: { popup: 'rounded-[28px]' }
+        });
+      } catch (err) {
+        toast.error('Failed to disconnect. Try again.');
+      } finally {
+        setActionLoading(false);
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#F5E6DA]">
-      <Toaster position="top-center" />
+      <Toaster position="top-center" reverseOrder={false} />
       <Sidebar />
 
       <main className="flex-1 p-6 lg:p-12">
+        {/* Role Badge */}
         <div className="mb-4">
           <span className="px-3 py-1 rounded-full bg-[var(--color-brand)] text-white text-[10px] font-bold uppercase tracking-widest">
             Staff
           </span>
         </div>
 
+        {/* Welcome Text */}
         <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-10">
           Welcome, {user?.name}
         </h1>
 
         <div className="w-full max-w-md">
+          {/* Section Header */}
           <div className="flex items-center gap-2 mb-5">
             <CalendarDays className="w-4 h-4 text-[var(--color-brand)]" />
             <span className="text-[10px] font-black text-gray-500 uppercase tracking-[3px]">
@@ -84,10 +123,13 @@ const StaffDashboard = () => {
             </span>
           </div>
 
+          {/* Loader or Content */}
           {loading ? (
             <div className="rounded-[28px] bg-white/70 border border-white p-7 shadow-xl flex items-center justify-center gap-3 h-44">
               <Loader2 className="w-5 h-5 animate-spin text-[var(--color-brand)]" />
-              <span className="text-xs font-black text-gray-400 uppercase tracking-[2px]">Checking Status...</span>
+              <span className="text-xs font-black text-gray-400 uppercase tracking-[2px]">
+                Checking Status...
+              </span>
             </div>
           ) : (
             <GoogleCalendarCard
