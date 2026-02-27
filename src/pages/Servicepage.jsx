@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import axiosInstance from '../api/axiosInstance';
+import React, { useState, useEffect, useCallback } from 'react';
+import Swal from 'sweetalert2'; // Import SweetAlert2
+import { serviceApi } from '../api/serviceApi';
+import { categoryService } from "../api/categoryService";
 import Sidebar from '../components/Sidebar';
 import ServiceRow from '../components/Service/ServiceRow';
 import ServiceForm from '../components/Service/ServiceForm';
@@ -25,66 +27,55 @@ const ServicePage = () => {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
 
-  useEffect(() => {
-    fetchServices();
-    fetchCategories();
-  }, []);
-
-  const fetchServices = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get('/services');
-      setServices(res.data);
+      const [svcRes, catRes] = await Promise.all([
+        serviceApi.getAll(),
+        categoryService.getAll()
+      ]);
+      setServices(svcRes.data);
+      setCategories(catRes.data);
     } catch (err) {
-      toast.error('Failed to load services');
+      toast.error('Failed to sync data');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const res = await axiosInstance.get('/categories');
-      setCategories(res.data);
-    } catch (err) {
-      toast.error('Failed to load categories');
-    }
-  };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
+  // ── Handle Delete with SweetAlert ──
   const handleDelete = async (id) => {
-    toast(
-      (t) => (
-        <div className="flex flex-col gap-4 p-1">
-          <p className="font-black text-gray-800 text-sm">Delete this service?</p>
-          <p className="text-xs text-gray-500">This action cannot be undone.</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="flex-1 px-4 py-2.5 bg-gray-100 text-xs font-black uppercase tracking-wider text-gray-600 hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={async () => {
-                toast.dismiss(t.id);
-                const deleting = toast.loading('Deleting...');
-                try {
-                  await axiosInstance.delete(`/services/${id}`);
-                  toast.success('Service deleted', { id: deleting });
-                  fetchServices();
-                } catch (err) {
-                  toast.error('Failed to delete', { id: deleting });
-                }
-              }}
-              className="flex-1 px-4 py-2.5 bg-[#B62025] text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-[#9a1a1e] transition-colors"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: 10000 }
-    );
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "This action cannot be undone!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#B62025', // Your custom Red
+      cancelButtonColor: '#F3F4F6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'rounded-[32px] border-none shadow-2xl',
+        confirmButton: 'rounded-xl px-6 py-3 text-xs font-black uppercase tracking-widest',
+        cancelButton: 'rounded-xl px-6 py-3 text-xs font-black uppercase tracking-widest text-gray-600'
+      },
+      buttonsStyling: true,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const deleting = toast.loading('Deleting...');
+        try {
+          await serviceApi.delete(id);
+          toast.success('Service deleted', { id: deleting });
+          fetchData();
+        } catch (err) {
+          toast.error('Failed to delete', { id: deleting });
+        }
+      }
+    });
   };
 
   const handleFormSubmit = async (e) => {
@@ -92,15 +83,15 @@ const ServicePage = () => {
     const loadId = toast.loading(editingId ? 'Updating...' : 'Creating...');
     try {
       if (editingId) {
-        await axiosInstance.put(`/services/${editingId}`, form);
+        await serviceApi.update(editingId, form);
         toast.success('Service updated!', { id: loadId });
       } else {
-        await axiosInstance.post('/services', form);
+        await serviceApi.create(form);
         toast.success('Service created!', { id: loadId });
       }
       setIsModalOpen(false);
       setEditingId(null);
-      fetchServices();
+      fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong', { id: loadId });
     }
@@ -109,6 +100,21 @@ const ServicePage = () => {
   const openCreate = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (s) => {
+    setEditingId(s._id);
+    setForm({
+      name: s.name,
+      category: s.category?._id || s.category,
+      duration: s.duration,
+      price: s.price,
+      depositPercentage: s.depositPercentage,
+      description: s.description,
+      genderRestriction: s.genderRestriction,
+      isActive: s.isActive,
+    });
     setIsModalOpen(true);
   };
 
@@ -133,8 +139,7 @@ const ServicePage = () => {
 
       <main className="flex-1 transition-all duration-300 ml-0 lg:ml-20 p-4 sm:p-6 md:p-8 lg:p-12 min-w-0">
         <div className="max-w-7xl mx-auto">
-
-          {/* ── Header ── */}
+          {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 sm:mb-12">
             <div>
               <div className="flex items-center gap-3 mb-3">
@@ -144,8 +149,7 @@ const ServicePage = () => {
                 <span className="text-[10px] font-black text-brand uppercase tracking-[3px]">Lough Skin Admin</span>
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter leading-none">
-                Our{' '}
-                <span className="text-[#22B8C8]">Services</span>
+                Our <span className="text-[#22B8C8]">Services</span>
               </h1>
               <div className="flex items-center gap-2 mt-3">
                 <div className="w-8 h-[2px] bg-brand rounded-full"></div>
@@ -164,16 +168,10 @@ const ServicePage = () => {
             </button>
           </div>
 
-          {/* ── Table Card ── */}
+          {/* Table Card */}
           <div className="bg-white/70 backdrop-blur-md rounded-[32px] shadow-2xl shadow-brand-soft/20 border-white overflow-hidden">
-
-            <div className="flex items-center gap-2 px-6 pt-5 pb-0 sm:hidden">
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[2px]">← Scroll to see all →</div>
-            </div>
-
-            <div className="overflow-x-auto w-full scrollbar-thin scrollbar-thumb-brand-soft scrollbar-track-transparent">
+            <div className="overflow-x-auto w-full">
               <table className="w-full text-left border-collapse" style={{ minWidth: '900px' }}>
-
                 <thead className="bg-[#F5EDE4]/60 border-b border-brand-soft/20">
                   <tr>
                     {tableHeaders.map((h, i) => (
@@ -192,11 +190,9 @@ const ServicePage = () => {
                 <tbody className="divide-y divide-gray-100/60">
                   {loading ? (
                     <tr>
-                      <td colSpan="8" className="py-32">
-                        <div className="flex flex-col items-center justify-center gap-4 text-gray-400">
-                          <Loader2 className="w-10 h-10 animate-spin text-brand" />
-                          <p className="font-black tracking-[4px] text-[10px] uppercase text-gray-400">Loading...</p>
-                        </div>
+                      <td colSpan="8" className="py-32 text-center">
+                        <Loader2 className="w-10 h-10 animate-spin text-brand mx-auto mb-2" />
+                        <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Loading...</span>
                       </td>
                     </tr>
                   ) : services.length > 0 ? (
@@ -204,57 +200,22 @@ const ServicePage = () => {
                       <ServiceRow
                         key={svc._id}
                         service={svc}
-                        onEdit={(s) => {
-                          setEditingId(s._id);
-                          setForm({
-                            name: s.name,
-                            category: s.category?._id || s.category,
-                            duration: s.duration,
-                            price: s.price,
-                            depositPercentage: s.depositPercentage,
-                            description: s.description,
-                            genderRestriction: s.genderRestriction,
-                            isActive: s.isActive,
-                          });
-                          setIsModalOpen(true);
-                        }}
+                        onEdit={openEdit}
                         onDelete={handleDelete}
                       />
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="py-24 text-center">
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
-                            <Scissors className="w-7 h-7 text-brand/40" />
-                          </div>
-                          <div>
-                            <p className="font-black text-gray-400 uppercase tracking-[3px] text-xs">No services yet</p>
-                            <p className="text-gray-300 text-xs mt-1">Click "Add Service" to create your first one</p>
-                          </div>
-                        </div>
-                      </td>
+                      <td colSpan="8" className="py-24 text-center text-gray-400 font-black uppercase text-xs tracking-widest">No services yet</td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
-
-            {!loading && services.length > 0 && (
-              <div className="px-8 py-4 bg-[#F5EDE4]/40 border-t border-brand-soft/20 flex items-center justify-between">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">
-                  Total: {services.length}
-                </span>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">
-                  Active: {services.filter((s) => s.isActive).length}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </main>
 
-      {/* Modal */}
       {isModalOpen && (
         <ServiceForm
           form={form}
