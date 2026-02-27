@@ -4,7 +4,7 @@ export const googleCalendarApi = {
 
   getStatus: async () => {
     const res = await axiosInstance.get('/staff/getGoogleCalenderStatus');
-    return res.data === true;
+    return res.data;
   },
 
 
