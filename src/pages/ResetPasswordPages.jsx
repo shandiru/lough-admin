@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 
-import { resetPasswordConfirm } from "../api/services";
+import { resetPasswordConfirm } from "../api/auth";
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();

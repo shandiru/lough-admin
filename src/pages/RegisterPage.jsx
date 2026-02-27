@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { sendInvite } from "../api/services"; 
+import { sendInvite } from "../api/auth";
 
 const RegisterPage = () => {
   const [form, setForm] = useState({

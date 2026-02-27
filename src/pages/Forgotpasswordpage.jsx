@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 // Service function-ai import seiyavum
-import { requestPasswordReset } from "../api/services";
+import { requestPasswordReset } from "../api/auth";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");

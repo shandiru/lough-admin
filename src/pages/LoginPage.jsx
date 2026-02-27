@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess, setError, clearError } from "../store/slices/authSlice";
-import { loginUser } from "../api/services"; // Direct service import
+import { loginUser } from "../api/auth";
 
 const LoginPage = () => {
   const dispatch = useDispatch();

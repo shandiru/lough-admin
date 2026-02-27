@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { verifySetupPassword } from "../api/services"; 
+import { verifySetupPassword } from "../api/auth";
 
 const SetupPasswordPage = () => {
   const [searchParams] = useSearchParams();
