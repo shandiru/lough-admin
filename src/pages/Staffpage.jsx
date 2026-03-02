@@ -6,8 +6,8 @@ import { Loader2, Users } from 'lucide-react';
 import { staffService } from '../api/staffService';
 import  {serviceApi} from '../api/serviceApi'
 import Sidebar from '../components/Sidebar';
-import StaffFormModal from '../components/Staff/staffFormModal';
-import StaffProfileModal from '../components/Staff/staffProfileModal';
+import StaffFormModal from '../components/Staff/staffformmodal';
+import StaffProfileModal from '../components/Staff/staffprofilemodal';
 import StaffCard from '../components/Staff/staffCard';
 import { StaffHeader, SearchBar } from '../components/Staff/staffUI';
 
