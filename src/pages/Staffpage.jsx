@@ -6,10 +6,10 @@ import { Loader2, Users } from 'lucide-react';
 import { staffService } from '../api/staffService';
 import  {serviceApi} from '../api/serviceApi'
 import Sidebar from '../components/Sidebar';
-import StaffFormModal from '../components/Staff/StaffFormModal';
-import StaffProfileModal from '../components/Staff/StaffProfileModal';
-import StaffCard from '../components/Staff/StaffCard';
-import { StaffHeader, SearchBar } from '../components/Staff/StaffUI';
+import StaffFormModal from '../components/Staff/staffFormModal';
+import StaffProfileModal from '../components/Staff/staffProfileModal';
+import StaffCard from '../components/Staff/staffCard';
+import { StaffHeader, SearchBar } from '../components/Staff/staffUI';
 
 const StaffPage = () => {
   const [staff, setStaff] = useState([]);
