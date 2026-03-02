@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand: #22B8C8;        /* Teal from LOUGH SKIN */
+  --color-brand-soft: #C9AF94;   /* Beige background */
+  --color-brand-light: #F5F5F5;  /* Soft white */
+}
