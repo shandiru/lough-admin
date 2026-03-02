@@ -3,8 +3,8 @@ import Swal from 'sweetalert2'; // Import SweetAlert2
 import { serviceApi } from '../api/serviceApi';
 import { categoryService } from "../api/categoryService";
 import Sidebar from '../components/Sidebar';
-import ServiceRow from '../components/Service/ServiceRow';
-import ServiceForm from '../components/Service/ServiceForm';
+import ServiceRow from '../components/service/serviceRow';
+import ServiceForm from '../components/service/serviceForm';
 import toast, { Toaster } from 'react-hot-toast';
 import { Plus, Loader2, Scissors } from 'lucide-react';
 
