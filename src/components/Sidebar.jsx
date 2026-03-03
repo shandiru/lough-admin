@@ -20,18 +20,10 @@ const Sidebar = () => {
       {/* Brand */}
       <div className="flex items-center justify-between p-4 border-b border-white/40">
         {!collapsed && (
-          <img
-            src="/logo.webp"
-            alt="Lough Skin"
-            className="h-12 w-auto"
-          />
+          <img src="/logo.webp" alt="Lough Skin" className="h-12 w-auto" />
         )}
         <button onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? (
-            <FiChevronRight size={20} />
-          ) : (
-            <FiChevronLeft size={20} />
-          )}
+          {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
         </button>
       </div>
 
@@ -44,9 +36,7 @@ const Sidebar = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-[#1f8e9a]">{name}</p>
-              <p className="text-xs text-[#1f8e9a]/70">
-                {role?.toUpperCase()}
-              </p>
+              <p className="text-xs text-[#1f8e9a]/70">{role?.toUpperCase()}</p>
             </div>
           </div>
         </div>
@@ -57,7 +47,6 @@ const Sidebar = () => {
         {links.map((link) => {
           const Icon = link.icon;
           const isActive = location.pathname === link.path;
-
           return (
             <Link
               key={link.path}
