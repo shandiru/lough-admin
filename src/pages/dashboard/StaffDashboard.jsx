@@ -7,7 +7,7 @@ import { CalendarDays, Loader2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../hooks/useAuth';
 import { googleCalendarApi } from '../../api/googleCalendar';
-import GoogleCalendarCard from '../../components/google/googleCalendarCard';
+import GoogleCalendarCard from '../../components/Google/GoogleCalendarCard';
 
 const StaffDashboard = () => {
   const { user } = useAuth();
