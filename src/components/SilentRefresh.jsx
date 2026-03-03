@@ -14,7 +14,7 @@ const SilentRefresh = ({ children }) => {
       if (!accessToken) {
         try {
           const res = await axios.post(
-            `http://localhost:5000/api/auth/refresh`,
+            `https://lough-porject.vercel.app/api/auth/refresh`,
             {},
             { withCredentials: true }
           );
