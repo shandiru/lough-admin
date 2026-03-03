@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { refreshSuccess, logout } from '../store/slices/authSlice';
-
+const API_URL = import.meta.env.VITE_API_URL;
 const SilentRefresh = ({ children }) => {
   const dispatch = useDispatch();
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -14,7 +14,7 @@ const SilentRefresh = ({ children }) => {
       if (!accessToken) {
         try {
           const res = await axios.post(
-            `https://lough-porject.vercel.app/api/auth/refresh`,
+           `${API_URL}/auth/refresh`,
             {},
             { withCredentials: true }
           );
