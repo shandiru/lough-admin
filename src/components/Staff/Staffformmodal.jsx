@@ -225,7 +225,13 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
               </div>
 
               {/* Next tab hint */}
-              <button type="button" onClick={() => setTab('profile')}
+              <button type="button" onClick={() => {
+                if (form.phone && !/^[\d\s\+\-\(\)]{7,15}$/.test(form.phone.trim())) {
+                  toast.error('Please enter a valid phone number.');
+                  return;
+                }
+                setTab('profile');
+              }}
                 className="w-full py-4 rounded-2xl bg-brand text-white font-black text-xs uppercase tracking-widest hover:bg-[#24a1ad] transition-all shadow-lg shadow-brand/20 mt-2"
               >
                 Next: Profile Details →
