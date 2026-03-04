@@ -71,7 +71,7 @@ const StaffDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F5E6DA]">
+      <div className="flex min-h-screen bg-[#F5E6DA]">
       <Toaster position="top-center" reverseOrder={false} />
       <Sidebar />
 
