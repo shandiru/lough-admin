@@ -9,7 +9,6 @@ import { profileService } from "../api/profileService";
 import ProfileUpdateModal from "./Profile/ProfileUpdateModal";
 import { Toaster } from "react-hot-toast";
 
-// Build full image URL from stored path "/uploads/profiles/xxx.jpg"
 const getImageUrl = (src) => {
   if (!src) return null;
   if (src.startsWith("http")) return src;

@@ -3,11 +3,11 @@ import { X, Camera, Loader2, User } from 'lucide-react';
 import { profileService } from '../../api/profileService';
 import toast from 'react-hot-toast';
 
-// Helper: build full image URL from stored path like "/uploads/profiles/profile-xxx.jpg"
+
 const getImageUrl = (src) => {
   if (!src) return null;
-  if (src.startsWith('http')) return src;                         // already full URL
-  return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`; // e.g. http://localhost:5000/uploads/...
+  if (src.startsWith('http')) return src;                        
+  return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`; 
 };
 
 const ProfileUpdateModal = ({ currentUser, staffData, onClose, onUpdated }) => {
