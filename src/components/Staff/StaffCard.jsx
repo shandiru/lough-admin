@@ -3,11 +3,18 @@ import { Scissors, ToggleLeft, ToggleRight, Pencil, Trash2, Mail, Clock, Refresh
 
 const GENDER_LABEL = { all: 'All', 'female-only': 'Female Only', 'male-only': 'Male Only' };
 
+const getImageUrl = (src) => {
+  if (!src) return null;
+  if (src.startsWith('http')) return src;
+  return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`;
+};
+
 const StaffCard = ({ staff, onView, onEdit, onToggle, onDelete, onResendInvite }) => {
   const u = staff.userId || {};
   const isActive = u.isActive;
   const isPending = !isActive;
   const initials = `${u.firstName?.[0] ?? ''}${u.lastName?.[0] ?? ''}`.toUpperCase();
+  const profileImage = getImageUrl(u.profileImage);
 
   return (
     <div className={`bg-white/70 backdrop-blur-md rounded-[28px] p-6 shadow-xl border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group ${
@@ -15,8 +22,11 @@ const StaffCard = ({ staff, onView, onEdit, onToggle, onDelete, onResendInvite }
     }`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-[#1a8f9a] flex items-center justify-center text-white font-black text-lg shadow-lg shadow-brand/25 shrink-0">
-            {initials}
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-[#1a8f9a] flex items-center justify-center text-white font-black text-lg shadow-lg shadow-brand/25 shrink-0 overflow-hidden">
+            {profileImage
+              ? <img src={profileImage} alt={initials} className="w-full h-full object-cover" />
+              : initials
+            }
           </div>
           <div className="min-w-0">
             <p className="font-black text-gray-900 text-sm leading-tight truncate">{u.firstName} {u.lastName}</p>
