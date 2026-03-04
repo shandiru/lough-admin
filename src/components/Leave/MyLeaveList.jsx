@@ -11,7 +11,6 @@ const STATUS = {
   cancelled: { cls: 'bg-gray-100 text-gray-400',      icon: <Ban size={11} /> },
 };
 
-const TYPE_EMOJI = { sick: '🤒', vacation: '🏖️', training: '📚', other: '📋' };
 const PAGE_SIZE = 5;
 
 const MyLeaveList = ({ leaves, loading, onCancel }) => {
@@ -52,10 +51,10 @@ const MyLeaveList = ({ leaves, loading, onCancel }) => {
     </div>
   );
 
-  const totalPages  = Math.ceil(leaves.length / PAGE_SIZE);
-  const safePage    = Math.min(page, totalPages);
-  const start       = (safePage - 1) * PAGE_SIZE;
-  const paginated   = leaves.slice(start, start + PAGE_SIZE);
+  const totalPages = Math.ceil(leaves.length / PAGE_SIZE);
+  const safePage   = Math.min(page, totalPages);
+  const start      = (safePage - 1) * PAGE_SIZE;
+  const paginated  = leaves.slice(start, start + PAGE_SIZE);
 
   return (
     <div className="flex flex-col gap-3">
@@ -68,7 +67,7 @@ const MyLeaveList = ({ leaves, loading, onCancel }) => {
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <span className="font-bold text-gray-800">
-                  {TYPE_EMOJI[leave.type]} {leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave
+                  {leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave
                 </span>
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 ${s.cls}`}>
                   {s.icon} {leave.status}
@@ -104,31 +103,22 @@ const MyLeaveList = ({ leaves, loading, onCancel }) => {
             Showing {start + 1}–{Math.min(start + PAGE_SIZE, leaves.length)} of {leaves.length}
           </p>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={safePage === 1}
-              className="w-8 h-8 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 transition disabled:opacity-40"
-            >
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
+              className="w-8 h-8 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 transition disabled:opacity-40">
               <ChevronLeft size={15} />
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
+              <button key={p} onClick={() => setPage(p)}
                 className={`w-8 h-8 rounded-xl text-xs font-black transition ${
                   p === safePage
                     ? 'bg-[var(--color-brand)] text-white shadow-md'
                     : 'bg-white border border-gray-100 shadow-sm text-gray-500 hover:bg-gray-50'
-                }`}
-              >
+                }`}>
                 {p}
               </button>
             ))}
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={safePage === totalPages}
-              className="w-8 h-8 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 transition disabled:opacity-40"
-            >
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
+              className="w-8 h-8 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 transition disabled:opacity-40">
               <ChevronRight size={15} />
             </button>
           </div>
