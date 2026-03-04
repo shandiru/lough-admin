@@ -1,21 +1,24 @@
-// src/config/roleLinks.js
 import {
   FiHome,
-  FiGrid,        // For Category
-  FiLayers,      // For Service
-  FiUsers,       // For Staff
+  FiGrid,
+  FiLayers,
+  FiUsers,
   FiUser,
   FiShoppingBag,
-} from "react-icons/fi";
+  FiCalendar,
+} from 'react-icons/fi';
 
 export const adminLinks = [
-  { path: "/dashboard/admin", label: "Overview", icon: FiHome },
-  { path: "/dashboard/admin/category", label: "Category", icon: FiGrid },
-  { path: "/dashboard/admin/service", label: "Service", icon: FiLayers },
-  { path: "/dashboard/admin/staff", label: "Staff", icon: FiUsers },
+  { path: '/dashboard/admin',          label: 'Overview',  icon: FiHome },
+  { path: '/dashboard/admin/category', label: 'Category',  icon: FiGrid },
+  { path: '/dashboard/admin/service',  label: 'Service',   icon: FiLayers },
+  { path: '/dashboard/admin/staff',    label: 'Staff',     icon: FiUsers },
+  { path: '/dashboard/admin/leaves',   label: 'Leaves',    icon: FiCalendar }, // ← NEW
 ];
 
 export const staffLinks = [
   { path: "/dashboard/staff", label: "Home", icon: FiHome },
-
+  { path: "/dashboard/staff/profile", label: "Profile", icon: FiUser },
+  { path: "/dashboard/staff/orders", label: "Orders", icon: FiShoppingBag },
+  { path: '/dashboard/staff/leaves',   label: 'Leaves',  icon: FiCalendar }, 
 ];
