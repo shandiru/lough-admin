@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { CalendarDays, BellRing, CheckCircle, XCircle, Clock, Ban } from 'lucide-react';
+import { CalendarDays, CheckCircle, XCircle, Clock, Ban, RefreshCw } from 'lucide-react';
 
 import Sidebar from '../components/Sidebar';
 import AdminLeaveReviewModal from '../components/Leave/AdminLeaveReviewModal';
 import { leaveService } from '../api/leaveService';
-import { useSocket } from '../hooks/useSocket';
 
 const STATUS = {
   pending:   { cls: 'bg-yellow-100 text-yellow-700',  icon: <Clock size={11} /> },
@@ -18,54 +17,28 @@ const TYPE_EMOJI = { sick: '🤒', vacation: '🏖️', training: '📚', other:
 const FILTERS = ['all', 'pending', 'approved', 'rejected', 'cancelled'];
 
 const AdminLeavePage = () => {
-  const socket = useSocket();
-
   const [leaves,        setLeaves]        = useState([]);
   const [loading,       setLoading]       = useState(true);
+  const [refreshing,    setRefreshing]    = useState(false);
   const [filter,        setFilter]        = useState('pending');
   const [selectedLeave, setSelectedLeave] = useState(null);
 
-  const fetchLeaves = (status) => {
-    setLoading(true);
+  const fetchLeaves = useCallback((status, isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+
     leaveService.getAllLeaves(status === 'all' ? '' : status)
       .then(res => setLeaves(res.data))
       .catch(() => toast.error('Failed to load leave requests'))
-      .finally(() => setLoading(false));
-  };
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
+  }, []);
 
-  useEffect(() => { fetchLeaves(filter); }, [filter]);
+  useEffect(() => { fetchLeaves(filter); }, [filter, fetchLeaves]);
 
-  // Real-time: staff applies new leave
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleNew = ({ message, leave }) => {
-      toast(t => (
-        <div className="flex items-start gap-3">
-          <BellRing size={16} className="text-[var(--color-brand)]" />
-          <div>
-            <p className="font-bold text-sm">New Leave Request 📋</p>
-            <p className="text-xs text-gray-500">{message}</p>
-          </div>
-        </div>
-      ), { duration: 7000, style: { borderRadius: '16px', padding: '12px 16px' } });
-
-      if (filter === 'all' || filter === 'pending')
-        setLeaves(prev => [leave, ...prev]);
-    };
-
-    const handleCancelled = ({ message, leaveId }) => {
-      toast.success(message);
-      setLeaves(prev => prev.map(l => l._id === leaveId ? { ...l, status: 'cancelled' } : l));
-    };
-
-    socket.on('leave:new',       handleNew);
-    socket.on('leave:cancelled', handleCancelled);
-    return () => {
-      socket.off('leave:new',       handleNew);
-      socket.off('leave:cancelled', handleCancelled);
-    };
-  }, [socket, filter]);
+  const handleRefresh = () => fetchLeaves(filter, true);
 
   const handleReviewed = (leaveId, status, adminNote) => {
     setLeaves(prev => prev.map(l => l._id === leaveId ? { ...l, status, adminNote } : l));
@@ -86,13 +59,24 @@ const AdminLeavePage = () => {
             <CalendarDays size={16} className="text-[var(--color-brand)]" />
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[3px]">Management</span>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900">Leave Requests</h1>
-            {pendingCount > 0 && (
-              <span className="bg-[var(--color-brand)] text-white text-xs font-black px-3 py-1 rounded-full">
-                {pendingCount} Pending
-              </span>
-            )}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900">Leave Requests</h1>
+              {pendingCount > 0 && (
+                <span className="bg-[var(--color-brand)] text-white text-xs font-black px-3 py-1 rounded-full">
+                  {pendingCount} Pending
+                </span>
+              )}
+            </div>
+            {/* Refresh button */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 bg-white text-gray-600 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition disabled:opacity-60"
+            >
+              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
           </div>
           <div className="w-16 h-1 bg-[var(--color-brand)] mt-3 rounded-full opacity-50" />
         </div>

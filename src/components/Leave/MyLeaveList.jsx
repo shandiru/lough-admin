@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Loader2, CheckCircle, XCircle, Clock, Ban } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Loader2, CheckCircle, XCircle, Clock, Ban, ChevronLeft, ChevronRight } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { leaveService } from '../../api/leaveService';
 import toast from 'react-hot-toast';
@@ -12,8 +12,11 @@ const STATUS = {
 };
 
 const TYPE_EMOJI = { sick: '🤒', vacation: '🏖️', training: '📚', other: '📋' };
+const PAGE_SIZE = 5;
 
 const MyLeaveList = ({ leaves, loading, onCancel }) => {
+  const [page, setPage] = useState(1);
+
   const handleCancel = async (id) => {
     const result = await Swal.fire({
       title: 'Cancel Leave?',
@@ -49,9 +52,14 @@ const MyLeaveList = ({ leaves, loading, onCancel }) => {
     </div>
   );
 
+  const totalPages  = Math.ceil(leaves.length / PAGE_SIZE);
+  const safePage    = Math.min(page, totalPages);
+  const start       = (safePage - 1) * PAGE_SIZE;
+  const paginated   = leaves.slice(start, start + PAGE_SIZE);
+
   return (
     <div className="flex flex-col gap-3">
-      {leaves.map((leave) => {
+      {paginated.map((leave) => {
         const s    = STATUS[leave.status] || STATUS.pending;
         const days = Math.ceil((new Date(leave.endDate) - new Date(leave.startDate)) / 86400000) + 1;
         return (
@@ -88,6 +96,44 @@ const MyLeaveList = ({ leaves, loading, onCancel }) => {
           </div>
         );
       })}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-2 px-1">
+          <p className="text-[11px] text-gray-400 font-medium">
+            Showing {start + 1}–{Math.min(start + PAGE_SIZE, leaves.length)} of {leaves.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              className="w-8 h-8 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 transition disabled:opacity-40"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-8 h-8 rounded-xl text-xs font-black transition ${
+                  p === safePage
+                    ? 'bg-[var(--color-brand)] text-white shadow-md'
+                    : 'bg-white border border-gray-100 shadow-sm text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              className="w-8 h-8 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 transition disabled:opacity-40"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

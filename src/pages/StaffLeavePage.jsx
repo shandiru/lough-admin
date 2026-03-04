@@ -1,51 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { CalendarDays, PlusCircle, BellRing } from 'lucide-react';
+import { CalendarDays, PlusCircle, RefreshCw } from 'lucide-react';
 
 import Sidebar from '../components/Sidebar';
 import LeaveApplyModal from '../components/Leave/LeaveApplyModal';
 import MyLeaveList from '../components/Leave/MyLeaveList';
 import { leaveService } from '../api/leaveService';
-import { useSocket } from '../hooks/useSocket';
 
 const StaffLeavePage = () => {
-  const socket = useSocket();
-
   const [leaves,    setLeaves]    = useState([]);
   const [loading,   setLoading]   = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // Fetch leaves on mount
-  useEffect(() => {
+  const fetchLeaves = useCallback((isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+
     leaveService.getMyLeaves()
       .then(res => setLeaves(res.data))
       .catch(() => toast.error('Failed to load leaves'))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   }, []);
 
-  // Real-time: admin reviewed my leave
-  useEffect(() => {
-    if (!socket) return;
-    const handler = ({ message, status, leaveId, adminNote }) => {
-      setLeaves(prev => prev.map(l => l._id === leaveId ? { ...l, status, adminNote } : l));
-      const approved = status === 'approved';
-      toast(t => (
-        <div className="flex items-start gap-3">
-          <BellRing size={16} className={approved ? 'text-green-500' : 'text-red-500'} />
-          <div>
-            <p className="font-bold text-sm">{approved ? 'Leave Approved! 🎉' : 'Leave Rejected'}</p>
-            <p className="text-xs text-gray-500">{message}</p>
-            {adminNote && <p className="text-xs text-gray-400 mt-0.5">Note: {adminNote}</p>}
-          </div>
-        </div>
-      ), { duration: 7000, style: { borderRadius: '16px', padding: '12px 16px' } });
-    };
-    socket.on('leave:reviewed', handler);
-    return () => socket.off('leave:reviewed', handler);
-  }, [socket]);
+  // Fetch on mount
+  useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
 
-  const onNewLeave  = (leave) => setLeaves(prev => [leave, ...prev]);
-  const onCancel    = (id)    => setLeaves(prev => prev.map(l => l._id === id ? { ...l, status: 'cancelled' } : l));
+  // Poll every 30s to pick up admin approve/reject without socket
+  useEffect(() => {
+    const interval = setInterval(() => fetchLeaves(true), 30000);
+    return () => clearInterval(interval);
+  }, [fetchLeaves]);
+
+  const handleRefresh = () => fetchLeaves(true);
+
+  // Called when staff submits a new leave (optimistic)
+  const onNewLeave = (leave) => setLeaves(prev => [leave, ...prev]);
+
+  // Called when staff cancels a leave (optimistic)
+  const onCancel = (id) =>
+    setLeaves(prev => prev.map(l => l._id === id ? { ...l, status: 'cancelled' } : l));
 
   // Stats
   const total    = leaves.length;
@@ -68,10 +65,21 @@ const StaffLeavePage = () => {
           </div>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h1 className="text-3xl md:text-4xl font-black text-gray-900">Leave Requests</h1>
-            <button onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 bg-[var(--color-brand)] text-white text-sm font-bold px-5 py-2.5 rounded-2xl hover:opacity-90 transition shadow-md">
-              <PlusCircle size={16} /> Apply for Leave
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Refresh button */}
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2 bg-white text-gray-600 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition disabled:opacity-60"
+              >
+                <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+              <button onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 bg-[var(--color-brand)] text-white text-sm font-bold px-5 py-2.5 rounded-2xl hover:opacity-90 transition shadow-md">
+                <PlusCircle size={16} /> Apply for Leave
+              </button>
+            </div>
           </div>
           <div className="w-16 h-1 bg-[var(--color-brand)] mt-3 rounded-full opacity-50" />
         </div>
