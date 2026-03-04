@@ -17,8 +17,8 @@ export const adminLinks = [
 ];
 
 export const staffLinks = [
-  { path: '/dashboard/staff',          label: 'Home',    icon: FiHome },
-  { path: '/dashboard/staff/profile',  label: 'Profile', icon: FiUser },
-  { path: '/dashboard/staff/orders',   label: 'Orders',  icon: FiShoppingBag },
-  { path: '/dashboard/staff/leaves',   label: 'Leaves',  icon: FiCalendar }, // ← NEW
+  { path: "/dashboard/staff", label: "Home", icon: FiHome },
+  { path: "/dashboard/staff/profile", label: "Profile", icon: FiUser },
+  { path: "/dashboard/staff/orders", label: "Orders", icon: FiShoppingBag },
+  { path: '/dashboard/staff/leaves',   label: 'Leaves',  icon: FiCalendar }, 
 ];
