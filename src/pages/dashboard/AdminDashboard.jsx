@@ -6,7 +6,7 @@ const AdminDashboard = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#F5E6DA]">
+    <div className="min-h-screen  bg-[#F5E6DA]">
       <Sidebar />
       <main className="flex-1 p-6 lg:p-12 flex flex-col items-start justify-start">
         <div className="mb-4">
