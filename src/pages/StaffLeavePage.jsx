@@ -51,7 +51,7 @@ const StaffLeavePage = () => {
   const rejected = leaves.filter(l => l.status === 'rejected').length;
 
   return (
-    <div className="min-h-screen  bg-[#F5E6DA]">
+    <div className="flex min-h-screen bg-[#F5E6DA]">
       <Toaster position="top-right" reverseOrder={false} />
       <Sidebar />
 
