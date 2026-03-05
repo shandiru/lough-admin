@@ -3,7 +3,7 @@ import { X, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { leaveService } from '../../api/leaveService';
 import toast from 'react-hot-toast';
 
-const TYPE_EMOJI = { sick: '🤒', vacation: '🏖️', training: '📚', other: '📋' };
+
 
 const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
   const [adminNote, setAdminNote] = useState('');
@@ -49,7 +49,7 @@ const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
             </div>
           </div>
           <div className="mt-1 text-sm text-gray-700 flex flex-col gap-1">
-            <span><strong>Type:</strong> {TYPE_EMOJI[leave?.type]} {leave?.type?.charAt(0).toUpperCase() + leave?.type?.slice(1)}</span>
+            <span><strong>Type:</strong>  {leave?.type?.charAt(0).toUpperCase() + leave?.type?.slice(1)}</span>
             <span><strong>Duration:</strong> {days} day{days > 1 ? 's' : ''}</span>
             <span><strong>From:</strong> {new Date(leave?.startDate).toDateString()}</span>
             <span><strong>To:</strong>   {new Date(leave?.endDate).toDateString()}</span>
