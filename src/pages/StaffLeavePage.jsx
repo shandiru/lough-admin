@@ -8,10 +8,10 @@ import MyLeaveList from '../components/Leave/MyLeaveList';
 import { leaveService } from '../api/leaveService';
 
 const StaffLeavePage = () => {
-  const [leaves,    setLeaves]    = useState([]);
-  const [loading,   setLoading]   = useState(true);
+  const [leaves,     setLeaves]    = useState([]);
+  const [loading,    setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal,  setShowModal] = useState(false);
 
   const fetchLeaves = useCallback((isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -20,16 +20,12 @@ const StaffLeavePage = () => {
     leaveService.getMyLeaves()
       .then(res => setLeaves(res.data))
       .catch(() => toast.error('Failed to load leaves'))
-      .finally(() => {
-        setLoading(false);
-        setRefreshing(false);
-      });
+      .finally(() => { setLoading(false); setRefreshing(false); });
   }, []);
 
-  // Fetch on mount
   useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
 
-  // Poll every 30s to pick up admin approve/reject without socket
+  // Poll every 30s to pick up admin approve/reject
   useEffect(() => {
     const interval = setInterval(() => fetchLeaves(true), 30000);
     return () => clearInterval(interval);
@@ -37,12 +33,20 @@ const StaffLeavePage = () => {
 
   const handleRefresh = () => fetchLeaves(true);
 
-  // Called when staff submits a new leave (optimistic)
+  // New leave submitted
   const onNewLeave = (leave) => setLeaves(prev => [leave, ...prev]);
 
-  // Called when staff cancels a leave (optimistic)
+  // Pending leave cancelled → mark as cancelled
   const onCancel = (id) =>
     setLeaves(prev => prev.map(l => l._id === id ? { ...l, status: 'cancelled' } : l));
+
+  // Pending leave edited → replace record
+  const onUpdated = (updated) =>
+    setLeaves(prev => prev.map(l => l._id === updated._id ? updated : l));
+
+  // Any leave deleted → remove from list
+  const onDeleted = (id) =>
+    setLeaves(prev => prev.filter(l => l._id !== id));
 
   // Stats
   const total    = leaves.length;
@@ -66,12 +70,10 @@ const StaffLeavePage = () => {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h1 className="text-3xl md:text-4xl font-black text-gray-900">Leave Requests</h1>
             <div className="flex items-center gap-2">
-              {/* Refresh button */}
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="flex items-center gap-2 bg-white text-gray-600 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition disabled:opacity-60"
-              >
+                className="flex items-center gap-2 bg-white text-gray-600 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition disabled:opacity-60">
                 <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
                 {refreshing ? 'Refreshing...' : 'Refresh'}
               </button>
@@ -100,7 +102,13 @@ const StaffLeavePage = () => {
         </div>
 
         {/* Leave List */}
-        <MyLeaveList leaves={leaves} loading={loading} onCancel={onCancel} />
+        <MyLeaveList
+          leaves={leaves}
+          loading={loading}
+          onCancel={onCancel}
+          onUpdated={onUpdated}
+          onDeleted={onDeleted}
+        />
       </main>
 
       {showModal && (
