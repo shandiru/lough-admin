@@ -7,12 +7,16 @@ import AdminLeaveReviewModal  from '../components/Leave/AdminLeaveReviewModal';
 import AdminLeaveToggleModal  from '../components/Leave/Adminleavetogglemodal';
 import { leaveService } from '../api/leaveService';
 
-// Status styling
+// ── Brand Colors (matching @theme variables) ──
+// --color-brand:       #22B8C8  (Teal)
+// --color-brand-soft:  #C9AF94  (Beige)
+// --color-brand-light: #F5F5F5  (Soft white)
+
 const STATUS = {
-  pending:   { cls: 'bg-yellow-100 text-yellow-700',                         icon: <Clock size={11} /> },
-  approved:  { cls: 'bg-green-100 text-green-700',                           icon: <CheckCircle size={11} /> },
-  rejected:  { cls: 'bg-[#B62025]/10 text-[#B62025]',                        icon: <XCircle size={11} /> },
-  cancelled: { cls: 'bg-gray-100 text-gray-400',                             icon: <Ban size={11} /> },
+  pending:   { cls: 'bg-yellow-100 text-yellow-700',           icon: <Clock size={11} /> },
+  approved:  { cls: 'bg-[#22B8C8]/10 text-[#22B8C8]',         icon: <CheckCircle size={11} /> },
+  rejected:  { cls: 'bg-red-100 text-red-500',                 icon: <XCircle size={11} /> },
+  cancelled: { cls: 'bg-gray-100 text-gray-400',               icon: <Ban size={11} /> },
 };
 
 const FILTERS = ['all', 'pending', 'approved', 'rejected', 'cancelled'];
@@ -23,15 +27,64 @@ const getImageUrl = (src) => {
   return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`;
 };
 
+// ── Teal Spinner Component ──
+const Spinner = ({ size = 'md' }) => {
+  const sizes = { sm: 'w-4 h-4', md: 'w-8 h-8', lg: 'w-12 h-12' };
+  return (
+    <div className={`${sizes[size]} relative`}>
+      <div
+        className={`${sizes[size]} rounded-full border-4 border-[#C9AF94]/30 border-t-[#22B8C8] animate-spin`}
+      />
+    </div>
+  );
+};
+
+// ── Full-page Loading Overlay ──
+const PageLoader = () => (
+  <div className="flex flex-col items-center justify-center py-28 gap-4">
+    <div className="relative">
+      {/* Outer ring */}
+      <div className="w-16 h-16 rounded-full border-4 border-[#C9AF94]/20 border-t-[#22B8C8] animate-spin" />
+      {/* Inner ring */}
+      <div className="absolute inset-2 rounded-full border-4 border-[#22B8C8]/20 border-b-[#C9AF94] animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.7s' }} />
+      {/* Center dot */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-[#22B8C8]" />
+      </div>
+    </div>
+    <p className="text-[11px] font-black uppercase tracking-[3px] text-[#C9AF94]">Loading...</p>
+  </div>
+);
+
+// ── Skeleton Card ──
+const SkeletonCard = () => (
+  <div className="bg-white rounded-[20px] p-5 shadow-sm border border-[#C9AF94]/20 flex flex-col gap-4">
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-[#C9AF94]/20 animate-pulse" />
+        <div className="flex flex-col gap-1.5">
+          <div className="w-28 h-3 bg-[#C9AF94]/20 rounded-full animate-pulse" />
+          <div className="w-20 h-2.5 bg-[#C9AF94]/10 rounded-full animate-pulse" />
+        </div>
+      </div>
+      <div className="w-16 h-5 bg-[#22B8C8]/10 rounded-full animate-pulse" />
+    </div>
+    <div className="bg-[#F5F5F5] rounded-xl p-3 flex flex-col gap-2">
+      <div className="w-32 h-3 bg-[#C9AF94]/20 rounded-full animate-pulse" />
+      <div className="w-24 h-2.5 bg-[#C9AF94]/10 rounded-full animate-pulse" />
+    </div>
+    <div className="w-full h-10 bg-[#22B8C8]/10 rounded-xl animate-pulse mt-auto" />
+  </div>
+);
+
 const AdminLeavePage = () => {
   const [leaves,        setLeaves]        = useState([]);
   const [loading,       setLoading]       = useState(true);
   const [refreshing,    setRefreshing]    = useState(false);
   const [filter,        setFilter]        = useState('pending');
-  const [selectedLeave, setSelectedLeave] = useState(null); // pending → review modal
-  const [toggleLeave,   setToggleLeave]   = useState(null); // approved/rejected → toggle modal
+  const [selectedLeave, setSelectedLeave] = useState(null);
+  const [toggleLeave,   setToggleLeave]   = useState(null);
 
-  // Filters
   const [staffSearch, setStaffSearch] = useState('');
   const [dateFrom,    setDateFrom]    = useState('');
   const [dateTo,      setDateTo]      = useState('');
@@ -50,12 +103,10 @@ const AdminLeavePage = () => {
 
   const handleRefresh = () => fetchLeaves(filter, true);
 
-  // Called after pending review
   const handleReviewed = (leaveId, status, adminNote) => {
     setLeaves(prev => prev.map(l => l._id === leaveId ? { ...l, status, adminNote } : l));
   };
 
-  // Called after toggle (approved↔rejected)
   const handleToggled = (leaveId, status, adminNote) => {
     setLeaves(prev => prev.map(l => l._id === leaveId ? { ...l, status, adminNote } : l));
   };
@@ -75,96 +126,121 @@ const AdminLeavePage = () => {
     });
   }, [leaves, staffSearch, dateFrom, dateTo]);
 
-  const pendingCount    = leaves.filter(l => l.status === 'pending').length;
+  const pendingCount     = leaves.filter(l => l.status === 'pending').length;
   const hasActiveFilters = staffSearch || dateFrom || dateTo;
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-[#F5E6DA]">
       <Toaster position="top-right" reverseOrder={false} />
       <Sidebar />
 
       <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
 
-        {/* Header */}
+        {/* ── Header ── */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <CalendarDays size={16} className="text-brand" />
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[3px]">Management</span>
+            <CalendarDays size={16} className="text-[#22B8C8]" />
+            <span className="text-[10px] font-black text-[#C9AF94] uppercase tracking-[3px]">Management</span>
           </div>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-3xl md:text-4xl font-black text-gray-900">Leave Requests</h1>
               {pendingCount > 0 && (
-                <span className="bg-brand text-white text-xs font-black px-3 py-1 rounded-full">
+                <span className="bg-[#22B8C8] text-white text-xs font-black px-3 py-1 rounded-full shadow-md shadow-[#22B8C8]/30">
                   {pendingCount} Pending
                 </span>
               )}
             </div>
-            <button onClick={handleRefresh} disabled={refreshing}
-              className="flex items-center gap-2 bg-white text-gray-600 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition disabled:opacity-60">
-              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 bg-white text-gray-600 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-sm border border-[#C9AF94]/30 hover:bg-[#F5F5F5] transition disabled:opacity-60"
+            >
+              {refreshing
+                ? <Spinner size="sm" />
+                : <RefreshCw size={14} />
+              }
               {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
-          <div className="w-16 h-1 bg-brand mt-3 rounded-full opacity-50" />
+          {/* Brand underline */}
+          <div className="w-16 h-1 bg-[#22B8C8] mt-3 rounded-full opacity-60" />
         </div>
 
-        {/* Status Tabs */}
+        {/* ── Status Tabs ── */}
         <div className="flex gap-2 mb-5 flex-wrap">
           {FILTERS.map(f => (
-            <button key={f} onClick={() => setFilter(f)}
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
               className={`text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-2xl transition ${
                 filter === f
-                  ? 'bg-brand text-white shadow-md'
-                  : 'bg-white text-gray-500 hover:bg-white/80 shadow-sm border'
-              }`}>
+                  ? 'bg-[#22B8C8] text-white shadow-md shadow-[#22B8C8]/30'
+                  : 'bg-white text-gray-500 hover:bg-white/80 shadow-sm border border-[#C9AF94]/20'
+              }`}
+            >
               {f}
             </button>
           ))}
         </div>
 
-        {/* Filters Bar */}
-        <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-gray-100 flex flex-wrap gap-3 items-end">
+        {/* ── Filters Bar ── */}
+        <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-[#C9AF94]/20 flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[180px]">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Staff Name</label>
+            <label className="text-[10px] font-black text-[#C9AF94] uppercase tracking-widest block mb-1.5">Staff Name</label>
             <div className="relative">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-              <input type="text" placeholder="Search by name..." value={staffSearch}
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C9AF94]" />
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={staffSearch}
                 onChange={e => setStaffSearch(e.target.value)}
-                className="w-full pl-8 pr-4 py-2.5 bg-[#F5EDE4] rounded-xl text-sm text-gray-700 placeholder:text-gray-300 font-medium outline-none focus:ring-2 focus:ring-brand/20" />
+                className="w-full pl-8 pr-4 py-2.5 bg-[#F5F5F5] rounded-xl text-sm text-gray-700 placeholder:text-[#C9AF94]/60 font-medium outline-none focus:ring-2 focus:ring-[#22B8C8]/20 border border-transparent focus:border-[#22B8C8]/30 transition"
+              />
             </div>
           </div>
           <div className="min-w-[150px]">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">From Date</label>
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-              className="w-full px-3 py-2.5 bg-[#F5EDE4] rounded-xl text-sm text-gray-700 font-medium outline-none" />
+            <label className="text-[10px] font-black text-[#C9AF94] uppercase tracking-widest block mb-1.5">From Date</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="w-full px-3 py-2.5 bg-[#F5F5F5] rounded-xl text-sm text-gray-700 font-medium outline-none focus:ring-2 focus:ring-[#22B8C8]/20 border border-transparent focus:border-[#22B8C8]/30 transition"
+            />
           </div>
           <div className="min-w-[150px]">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">To Date</label>
-            <input type="date" value={dateTo} min={dateFrom} onChange={e => setDateTo(e.target.value)}
-              className="w-full px-3 py-2.5 bg-[#F5EDE4] rounded-xl text-sm text-gray-700 font-medium outline-none" />
+            <label className="text-[10px] font-black text-[#C9AF94] uppercase tracking-widest block mb-1.5">To Date</label>
+            <input
+              type="date"
+              value={dateTo}
+              min={dateFrom}
+              onChange={e => setDateTo(e.target.value)}
+              className="w-full px-3 py-2.5 bg-[#F5F5F5] rounded-xl text-sm text-gray-700 font-medium outline-none focus:ring-2 focus:ring-[#22B8C8]/20 border border-transparent focus:border-[#22B8C8]/30 transition"
+            />
           </div>
           {hasActiveFilters && (
-            <button onClick={clearFilters}
-              className="flex items-center gap-1.5 text-xs font-bold text-[#B62025] hover:bg-red-50 px-3 py-2.5 rounded-xl transition">
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 text-xs font-bold text-red-400 hover:bg-red-50 px-3 py-2.5 rounded-xl transition"
+            >
               <X size={13} /> Clear
             </button>
           )}
         </div>
 
         {hasActiveFilters && !loading && (
-          <p className="text-xs text-gray-400 font-medium mb-4">
+          <p className="text-xs text-[#C9AF94] font-medium mb-4">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''} found
           </p>
         )}
 
-        {/* Leaves Grid */}
+        {/* ── Leaves Grid ── */}
         {loading ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {[1, 2, 3].map(i => <div key={i} className="bg-white/60 rounded-2xl h-44 animate-pulse border" />)}
+            {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-24 gap-3 text-gray-400">
+          <div className="flex flex-col items-center py-24 gap-3 text-[#C9AF94]">
             <CalendarDays size={40} strokeWidth={1.2} />
             <p className="text-sm font-medium">No leave requests found</p>
           </div>
@@ -178,13 +254,14 @@ const AdminLeavePage = () => {
               const initials     = `${staff?.firstName?.[0] ?? ''}${staff?.lastName?.[0] ?? ''}`.toUpperCase();
 
               return (
-                <div key={leave._id}
-                  className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 flex flex-col gap-4 hover:shadow-md transition">
-
+                <div
+                  key={leave._id}
+                  className="bg-white rounded-[20px] p-5 shadow-sm border border-[#C9AF94]/20 flex flex-col gap-4 hover:shadow-md hover:border-[#22B8C8]/20 transition-all duration-200"
+                >
                   {/* Profile + Status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 shrink-0 rounded-full bg-brand/20 flex items-center justify-center text-brand font-black text-xs overflow-hidden border-2 border-white shadow-sm">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-[#22B8C8]/20 flex items-center justify-center text-[#22B8C8] font-black text-xs overflow-hidden border-2 border-white shadow-sm">
                         {profileImage
                           ? <img src={profileImage} alt={initials} className="w-full h-full object-cover" />
                           : initials}
@@ -193,7 +270,7 @@ const AdminLeavePage = () => {
                         <p className="font-bold text-gray-800 text-sm truncate">
                           {staff?.firstName} {staff?.lastName}
                         </p>
-                        <p className="text-[10px] text-gray-400 truncate">{staff?.email}</p>
+                        <p className="text-[10px] text-[#C9AF94] truncate">{staff?.email}</p>
                       </div>
                     </div>
                     <span className={`shrink-0 text-[9px] font-black px-2 py-1 rounded-full uppercase flex items-center gap-1 shadow-sm ${s.cls}`}>
@@ -202,16 +279,16 @@ const AdminLeavePage = () => {
                   </div>
 
                   {/* Leave Details */}
-                  <div className="bg-[#F5EDE4] rounded-xl p-3">
+                  <div className="bg-[#F5F5F5] rounded-xl p-3 border border-[#C9AF94]/10">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-gray-700">
                         {leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave
                       </span>
-                      <span className="text-[10px] font-black text-brand bg-white px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-black text-[#22B8C8] bg-white px-2 py-0.5 rounded-full border border-[#22B8C8]/20">
                         {days} day{days > 1 ? 's' : ''}
                       </span>
                     </div>
-                    <p className="text-[10px] text-gray-500 font-medium">
+                    <p className="text-[10px] text-[#C9AF94] font-medium">
                       {new Date(leave.startDate).toLocaleDateString('en-GB')} — {new Date(leave.endDate).toLocaleDateString('en-GB')}
                     </p>
                     {leave.reason && (
@@ -220,7 +297,7 @@ const AdminLeavePage = () => {
                   </div>
 
                   {leave.adminNote && (
-                    <div className="px-1 border-l-2 border-brand/20">
+                    <div className="px-1 border-l-2 border-[#22B8C8]/30">
                       <p className="text-[10px] text-gray-400 italic leading-relaxed">
                         <strong className="text-gray-500">Note:</strong> {leave.adminNote}
                       </p>
@@ -229,26 +306,29 @@ const AdminLeavePage = () => {
 
                   {/* Action Buttons */}
                   <div className="mt-auto flex flex-col gap-2">
-                    {/* Pending → Review */}
                     {leave.status === 'pending' && (
-                      <button onClick={() => setSelectedLeave(leave)}
-                        className="w-full bg-brand text-white text-[11px] font-black uppercase tracking-widest py-3 rounded-xl hover:opacity-90 transition shadow-lg shadow-brand/20">
+                      <button
+                        onClick={() => setSelectedLeave(leave)}
+                        className="w-full bg-[#22B8C8] text-white text-[11px] font-black uppercase tracking-widest py-3 rounded-xl hover:bg-[#1da6b5] transition shadow-lg shadow-[#22B8C8]/25"
+                      >
                         Review Request
                       </button>
                     )}
 
-                    {/* Approved → can reject (toggle) */}
                     {leave.status === 'approved' && (
-                      <button onClick={() => setToggleLeave(leave)}
-                        className="w-full border-2 border-red-300 text-red-500 text-[11px] font-black uppercase tracking-widest py-2.5 rounded-xl hover:bg-red-50 transition flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => setToggleLeave(leave)}
+                        className="w-full border-2 border-red-300 text-red-500 text-[11px] font-black uppercase tracking-widest py-2.5 rounded-xl hover:bg-red-50 transition flex items-center justify-center gap-1.5"
+                      >
                         <XCircle size={13} /> Reject This Leave
                       </button>
                     )}
 
-                    {/* Rejected → can approve (toggle) */}
                     {leave.status === 'rejected' && (
-                      <button onClick={() => setToggleLeave(leave)}
-                        className="w-full border-2 border-green-300 text-green-600 text-[11px] font-black uppercase tracking-widest py-2.5 rounded-xl hover:bg-green-50 transition flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => setToggleLeave(leave)}
+                        className="w-full border-2 border-[#22B8C8]/40 text-[#22B8C8] text-[11px] font-black uppercase tracking-widest py-2.5 rounded-xl hover:bg-[#22B8C8]/5 transition flex items-center justify-center gap-1.5"
+                      >
                         <CheckCircle size={13} /> Approve This Leave
                       </button>
                     )}
@@ -260,7 +340,6 @@ const AdminLeavePage = () => {
         )}
       </main>
 
-      {/* Pending → Review modal */}
       {selectedLeave && (
         <AdminLeaveReviewModal
           leave={selectedLeave}
@@ -269,7 +348,6 @@ const AdminLeavePage = () => {
         />
       )}
 
-      {/* Approved/Rejected → Toggle modal */}
       {toggleLeave && (
         <AdminLeaveToggleModal
           leave={toggleLeave}
