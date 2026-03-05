@@ -4,10 +4,10 @@ import { leaveService } from '../../api/leaveService';
 import toast from 'react-hot-toast';
 
 const LEAVE_TYPES = [
-  { value: 'sick',     label: '🤒 Sick Leave' },
-  { value: 'vacation', label: '🏖️ Vacation' },
-  { value: 'training', label: '📚 Training' },
-  { value: 'other',    label: '📋 Other' },
+  { value: 'sick',     label: ' Sick Leave' },
+  { value: 'vacation', label: ' Vacation' },
+  { value: 'training', label: ' Training' },
+  { value: 'other',    label: ' Other' },
 ];
 
 const LeaveApplyModal = ({ onClose, onSuccess }) => {
