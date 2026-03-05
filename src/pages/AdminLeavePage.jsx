@@ -4,7 +4,7 @@ import { CalendarDays, CheckCircle, XCircle, Clock, Ban, RefreshCw, Search, X } 
 
 import Sidebar from '../components/Sidebar';
 import AdminLeaveReviewModal  from '../components/Leave/AdminLeaveReviewModal';
-import AdminLeaveToggleModal  from '../components/Leave/AdminLeaveToggleModal';
+import AdminLeaveToggleModal  from '../components/Leave/Adminleavetogglemodal';
 import { leaveService } from '../api/leaveService';
 
 // Status styling
