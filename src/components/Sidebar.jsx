@@ -7,7 +7,7 @@ import { adminLinks, staffLinks } from "../config/roleLinks";
 import { FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { profileService } from "../api/profileService";
 import ProfileUpdateModal from "./Profile/ProfileUpdateModal";
-import { Toaster } from "react-hot-toast";
+
 
 const getImageUrl = (src) => {
   if (!src) return null;
@@ -66,7 +66,6 @@ const Sidebar = () => {
 
   return (
     <>
-      <Toaster position="top-center" />
 
       <aside
         className={`h-screen bg-[#cbb49c] text-[#22b8c7] flex flex-col transition-all duration-300 ${
