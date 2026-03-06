@@ -18,6 +18,7 @@ import CategoryPage    from './pages/CategoryPage';
 import ServicePage     from './pages/Servicepage';
 import StaffPage       from './pages/Staffpage';
 import AdminLeavePage  from './pages/AdminLeavePage';    // ← NEW
+import AdminBookingPage from './pages/BookingPage';
 
 // Staff pages
 import StaffDashboard  from './pages/dashboard/StaffDashboard';
@@ -51,6 +52,9 @@ const App = () => {
           } />
           <Route path="/dashboard/admin/leaves" element={
             <ProtectedRoute allowedRoles={['admin']}><AdminLeavePage /></ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin/bookings" element={
+            <ProtectedRoute allowedRoles={['admin']}><AdminBookingPage /></ProtectedRoute>
           } />
 
           {/* ── Staff ───────────────────────────────────────────────── */}
