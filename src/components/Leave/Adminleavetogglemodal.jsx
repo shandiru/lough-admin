@@ -1,26 +1,40 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { X, CheckCircle, XCircle, Loader2, AlertTriangle, Clock } from 'lucide-react';
 import { leaveService } from '../../api/leaveService';
 import toast from 'react-hot-toast';
 
+const toMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+
+const getDuration = (leave) => {
+  if (leave.isHourly && leave.startTime && leave.endTime) {
+    const mins = toMins(leave.endTime) - toMins(leave.startTime);
+    if (mins <= 0) return null;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}h${m > 0 ? ` ${m}min` : ''}` : `${m} min`;
+  }
+  const days = Math.ceil((new Date(leave.endDate) - new Date(leave.startDate)) / 86400000) + 1;
+  return `${days} day${days > 1 ? 's' : ''}`;
+};
+
 /**
- * Modal to toggle an already-reviewed leave:
- *  - approved  → reject  (ask reason)
- *  - rejected  → approve (ask reason/note)
+ * Toggle an already-reviewed leave:
+ *   approved → rejected  (reason required)
+ *   rejected → approved  (reason required)
  */
 const AdminLeaveToggleModal = ({ leave, onClose, onReviewed }) => {
   const [adminNote, setAdminNote] = useState(leave.adminNote || '');
   const [loading,   setLoading]   = useState(false);
 
-  const staff      = leave?.staffId?.userId;
-  const isApproved = leave.status === 'approved';
-  // Toggling to the opposite status
+  const staff        = leave?.staffId?.userId;
+  const isApproved   = leave.status === 'approved';
   const targetStatus = isApproved ? 'rejected' : 'approved';
-
   const actionLabel  = isApproved ? 'Reject' : 'Approve';
   const actionColor  = isApproved
     ? 'bg-red-500 hover:bg-red-600 text-white'
     : 'bg-[var(--color-brand)] hover:opacity-90 text-white';
+
+  const duration = getDuration(leave);
 
   const handleToggle = async () => {
     if (!adminNote.trim()) return toast.error('Please provide a reason for this change.');
@@ -37,12 +51,10 @@ const AdminLeaveToggleModal = ({ leave, onClose, onReviewed }) => {
     }
   };
 
-  const days = Math.ceil((new Date(leave?.endDate) - new Date(leave?.startDate)) / 86400000) + 1;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-md p-8 relative">
-        <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-gray-700">
+        <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 transition">
           <X size={20} />
         </button>
 
@@ -62,19 +74,19 @@ const AdminLeaveToggleModal = ({ leave, onClose, onReviewed }) => {
           </div>
         </div>
 
-        {/* Warning Banner */}
+        {/* Warning */}
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mt-4 mb-5">
           <AlertTriangle size={15} className="text-amber-500 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-700 font-medium">
-            You are changing a <strong>{leave.status}</strong> leave to <strong>{targetStatus}</strong>. 
+            You are changing a <strong>{leave.status}</strong> leave to <strong>{targetStatus}</strong>.
             A reason is required — it will be sent to the staff member.
           </p>
         </div>
 
-        {/* Staff + Leave info */}
-        <div className="bg-[#F5EDE4] rounded-2xl p-4 mb-5 flex flex-col gap-2">
+        {/* Staff + leave info */}
+        <div className="bg-[#F5EDE4] rounded-2xl p-4 mb-5 flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black text-sm">
+            <div className="w-9 h-9 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black text-sm shrink-0">
               {staff?.firstName?.charAt(0)}
             </div>
             <div>
@@ -82,27 +94,50 @@ const AdminLeaveToggleModal = ({ leave, onClose, onReviewed }) => {
               <p className="text-[10px] text-gray-400">{staff?.email}</p>
             </div>
           </div>
-          <div className="text-xs text-gray-600 flex flex-col gap-0.5 mt-1">
-            <span><strong>Type:</strong> {leave?.type?.charAt(0).toUpperCase() + leave?.type?.slice(1)} Leave</span>
-            <span><strong>Duration:</strong> {days} day{days > 1 ? 's' : ''} · {new Date(leave?.startDate).toDateString()} → {new Date(leave?.endDate).toDateString()}</span>
+
+          <div className="text-xs text-gray-600 flex flex-col gap-1">
+            {/* Type + hourly badge */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span>
+                <strong>Type:</strong> {leave?.type?.charAt(0).toUpperCase() + leave?.type?.slice(1)} Leave
+              </span>
+              {leave.isHourly && (
+                <span className="text-[9px] font-black text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Clock size={9} /> Hourly
+                </span>
+              )}
+            </div>
+
+            {/* Duration */}
+            {duration && <span><strong>Duration:</strong> {duration}</span>}
+
+            {/* Date / time */}
+            {leave.isHourly ? (
+              <>
+                <span><strong>Date:</strong> {new Date(leave.startDate).toDateString()}</span>
+                <span><strong>Time:</strong> {leave.startTime} – {leave.endTime}</span>
+              </>
+            ) : (
+              <span>
+                <strong>Dates:</strong> {new Date(leave.startDate).toDateString()} → {new Date(leave.endDate).toDateString()}
+              </span>
+            )}
+
             {leave?.reason && <span><strong>Staff Reason:</strong> {leave.reason}</span>}
           </div>
         </div>
 
-        {/* Reason input (required) */}
+        {/* Reason input */}
         <div className="mb-6">
           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 block">
             Reason for Change <span className="text-red-400">*</span>
           </label>
-          <textarea
-            value={adminNote}
-            onChange={(e) => setAdminNote(e.target.value)}
+          <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)}
             placeholder={isApproved
               ? 'Explain why this approved leave is being rejected...'
               : 'Explain why this rejected leave is now being approved...'}
             rows={3} maxLength={500}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] resize-none"
-          />
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] resize-none" />
           <p className="text-[10px] text-gray-400 mt-1">{adminNote.length}/500 characters</p>
         </div>
 
