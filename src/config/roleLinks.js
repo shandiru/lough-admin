@@ -13,7 +13,8 @@ export const adminLinks = [
   { path: '/dashboard/admin/category', label: 'Category',  icon: FiGrid },
   { path: '/dashboard/admin/service',  label: 'Service',   icon: FiLayers },
   { path: '/dashboard/admin/staff',    label: 'Staff',     icon: FiUsers },
-  { path: '/dashboard/admin/leaves',   label: 'Leaves',    icon: FiCalendar }, // ← NEW
+  { path: '/dashboard/admin/leaves',   label: 'Leaves',    icon: FiCalendar },
+  { path: '/dashboard/admin/bookings', label: 'Bookings',  icon: FiShoppingBag },
 ];
 
 export const staffLinks = [

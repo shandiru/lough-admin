@@ -14,7 +14,6 @@ const TABS = [
   { key: 'hours',    label: 'Hours',    icon: Clock },
 ];
 
-// ── Validation regexes ──
 const UK_PHONE_REGEX = /^(07\d{3} \d{6}|(\+44\s?7\d{3}\s?\d{6}))$/;
 const EMAIL_REGEX    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -24,10 +23,10 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
   const [tab, setTab] = useState('personal');
   const [loading, setLoading] = useState(false);
 
-  // ── Field-level errors ──
+  
   const [errors, setErrors] = useState({ firstName: '', lastName: '', email: '', phone: '' });
 
-  // ── Form state ──
+ 
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -42,7 +41,7 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
     workingHours: defaultWorkingHours(),
   });
 
-  // Populate when editing
+
   useEffect(() => {
     if (isEditing && editData) {
       const u = editData.userId || {};
@@ -156,8 +155,12 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
     const payload = { ...form, specializations: form.specializations.split(',').map(s => s.trim()).filter(Boolean) };
     try {
       if (isEditing) {
-        await axiosInstance.put(`/staff/${editData._id}`, payload);
-        toast.success('Staff updated!');
+        const res = await axiosInstance.put(`/staff/${editData._id}`, payload);
+        if (res.data.emailChangeInitiated) {
+          toast.success('Staff updated! Verification email sent to new address. Login blocked until verified.', { duration: 5000 });
+        } else {
+          toast.success('Staff updated!');
+        }
       } else {
         const res = await axiosInstance.post('/staff', payload);
         toast.success(res.data.message || 'Staff created & invite sent!');
@@ -234,7 +237,7 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
                     className={errors.firstName ? inpErr : inp}
                     value={form.firstName}
                     onChange={e => handleFirstNameChange(e.target.value)}
-                    disabled={isEditing && !!editData?.userId?.email}
+                   
                   />
                   <Hint field="firstName" />
                 </div>
@@ -259,12 +262,14 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
                   className={errors.email ? inpErr : inp}
                   value={form.email}
                   onChange={e => handleEmailChange(e.target.value)}
-                  disabled={isEditing}
                 />
-                {isEditing
-                  ? <p className="text-[10px] text-gray-400 mt-1 ml-2">Email cannot be changed after creation</p>
-                  : <Hint field="email" grey="Must be a valid email address" />
-                }
+                {isEditing ? (
+                  <p className="text-[10px] text-amber-500 mt-1.5 ml-2 font-semibold">
+                    ⚠ Changing email will require the staff member to verify the new address before they can log in.
+                  </p>
+                ) : (
+                  <Hint field="email" grey="Must be a valid email address" />
+                )}
               </div>
 
               {/* Phone */}

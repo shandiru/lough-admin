@@ -56,7 +56,7 @@ const CategoryPage = () => {
           toast.success("Category deleted successfully", { id: deleting });
           fetchCategories();
         } catch (err) {
-          toast.error("Failed to delete", { id: deleting });
+          toast.error(err.response?.data?.message, { id: deleting });
         }
       }
     });

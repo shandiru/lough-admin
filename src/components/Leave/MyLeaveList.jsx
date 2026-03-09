@@ -14,11 +14,25 @@ const STATUS = {
 
 const PAGE_SIZE = 5;
 
-const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
-  const [page,       setPage]       = useState(1);
-  const [editLeave,  setEditLeave]  = useState(null);
+// Compute human-readable duration for full-day or hourly leave
+const getDuration = (leave) => {
+  if (leave.isHourly && leave.startTime && leave.endTime) {
+    const [sh, sm] = leave.startTime.split(':').map(Number);
+    const [eh, em] = leave.endTime.split(':').map(Number);
+    const mins = (eh * 60 + em) - (sh * 60 + sm);
+    if (mins <= 0) return null;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}h${m > 0 ? ` ${m}min` : ''}` : `${m} min`;
+  }
+  const days = Math.ceil((new Date(leave.endDate) - new Date(leave.startDate)) / 86400000) + 1;
+  return `${days} day${days > 1 ? 's' : ''}`;
+};
 
-  // ── Cancel (pending → cancelled) ─────────────────────────────────────────
+const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
+  const [page,      setPage]      = useState(1);
+  const [editLeave, setEditLeave] = useState(null);
+
   const handleCancel = async (id) => {
     const result = await Swal.fire({
       title: 'Cancel Leave?',
@@ -42,7 +56,6 @@ const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
     }
   };
 
-  // ── Delete (any non-pending status) ──────────────────────────────────────
   const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: 'Delete Leave?',
@@ -88,14 +101,16 @@ const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
     <>
       <div className="flex flex-col gap-3">
         {paginated.map((leave) => {
-          const s    = STATUS[leave.status] || STATUS.pending;
-          const days = Math.ceil((new Date(leave.endDate) - new Date(leave.startDate)) / 86400000) + 1;
-          const isPending = leave.status === 'pending';
+          const s          = STATUS[leave.status] || STATUS.pending;
+          const duration   = getDuration(leave);
+          const isPending  = leave.status === 'pending';
 
           return (
             <div key={leave._id}
               className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
+
+                {/* Top badges row */}
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="font-bold text-gray-800">
                     {leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave
@@ -103,14 +118,33 @@ const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
                   <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 ${s.cls}`}>
                     {s.icon} {leave.status}
                   </span>
-                  <span className="text-[10px] font-black text-[var(--color-brand)] bg-[var(--color-brand)]/10 px-2 py-0.5 rounded-full">
-                    {days} day{days > 1 ? 's' : ''}
-                  </span>
+                  {duration && (
+                    <span className="text-[10px] font-black text-[var(--color-brand)] bg-[var(--color-brand)]/10 px-2 py-0.5 rounded-full">
+                      {duration}
+                    </span>
+                  )}
+                  {/* Hourly badge */}
+                  {leave.isHourly && (
+                    <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Clock size={9} /> Hourly
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm text-gray-500">
-                  {new Date(leave.startDate).toDateString()} → {new Date(leave.endDate).toDateString()}
-                </p>
-                {leave.reason && <p className="text-xs text-gray-400 mt-0.5">"{leave.reason}"</p>}
+
+                {/* Date / time range */}
+                {leave.isHourly ? (
+                  <p className="text-sm text-gray-500">
+                    {new Date(leave.startDate).toDateString()} · {leave.startTime} – {leave.endTime}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    {new Date(leave.startDate).toDateString()} → {new Date(leave.endDate).toDateString()}
+                  </p>
+                )}
+
+                {leave.reason && (
+                  <p className="text-xs text-gray-400 mt-0.5">"{leave.reason}"</p>
+                )}
                 {leave.adminNote && (
                   <p className="text-xs text-gray-500 mt-0.5 italic">
                     <strong>Admin note:</strong> {leave.adminNote}
@@ -118,9 +152,8 @@ const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
                 )}
               </div>
 
-              {/* Action Buttons */}
+              {/* Actions */}
               <div className="flex items-center gap-2 shrink-0">
-                {/* Pending → Edit + Cancel */}
                 {isPending && (
                   <>
                     <button onClick={() => setEditLeave(leave)}
@@ -133,8 +166,6 @@ const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
                     </button>
                   </>
                 )}
-
-                {/* Non-pending → Delete (cancelled only) */}
                 {leave.status === 'cancelled' && (
                   <button onClick={() => handleDelete(leave._id)}
                     className="text-xs font-bold text-gray-400 border border-gray-200 rounded-xl px-4 py-2 flex items-center gap-1.5 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition">
@@ -176,15 +207,11 @@ const MyLeaveList = ({ leaves, loading, onCancel, onUpdated, onDeleted }) => {
         )}
       </div>
 
-      {/* Edit Modal */}
       {editLeave && (
         <LeaveEditModal
           leave={editLeave}
           onClose={() => setEditLeave(null)}
-          onUpdated={(updated) => {
-            onUpdated(updated);
-            setEditLeave(null);
-          }}
+          onUpdated={(updated) => { onUpdated(updated); setEditLeave(null); }}
         />
       )}
     </>

@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL =  import.meta.env.VITE_API_URL;
+import config from '../config/index';
+const API_URL = config.apiUrl;
 
 export const sendInvite = async (formData) => {
   try {
@@ -32,7 +33,7 @@ export const loginUser = async (credentials) => {
     return response.data;
   } catch (error) {
     
-    throw error.response?.data?.message || "Login failed. Please try again.";
+    throw error.response?.data?.message ;
   }
 };
 
@@ -43,7 +44,7 @@ export const resetPasswordConfirm = async (data) => {
     return response.data;
   } catch (error) {
     
-    throw error.response?.data?.message || "Reset failed. Link may have expired.";
+    throw error.response?.data?.message;
   }
 };
 
@@ -54,6 +55,18 @@ export const requestPasswordReset = async (email) => {
     return response.data;
   } catch (error) {
   
-    throw error.response?.data?.message || "Something went wrong. Try again.";
+    throw error.response?.data?.message ;
+  }
+};
+
+
+
+export const checkTokenStatus = async (token, email) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/verify-token-status`, { token, email });
+    return response.data;
+  } catch (error) {
+    
+    throw error.response?.data?.message ;
   }
 };

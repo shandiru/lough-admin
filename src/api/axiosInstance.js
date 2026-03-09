@@ -1,8 +1,8 @@
 import axios from 'axios';
 import store from '../store/store';
 import { refreshSuccess, logout } from '../store/slices/authSlice';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import config from '../config/index';
+const API_URL = config.apiUrl;
 const axiosInstance = axios.create({
   baseURL: API_URL,
   withCredentials: true, 

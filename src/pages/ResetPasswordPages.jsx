@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-
-import { resetPasswordConfirm } from "../api/auth";
+import { resetPasswordConfirm, checkTokenStatus } from "../api/auth";
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
@@ -20,11 +19,28 @@ const ResetPasswordPage = () => {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  
   useEffect(() => {
-    if (!token || !email) {
-      setStatus("error");
-      setMessage("Invalid or missing reset link. Please request a new one.");
-    }
+    const verifyTokenOnLoad = async () => {
+      if (!token || !email) {
+        setStatus("error");
+        setMessage("Invalid or missing reset link. Please request a new one.");
+        return;
+      }
+
+      try {
+        setStatus("loading");
+       
+        await checkTokenStatus(token, email);
+        setStatus("idle");
+      } catch (err) {
+        setStatus("error");
+        
+        setMessage(err); 
+      }
+    };
+
+    verifyTokenOnLoad();
   }, [token, email]);
 
   const handleChange = (e) => {
@@ -50,7 +66,6 @@ const ResetPasswordPage = () => {
     setMessage("");
 
     try {
-      // API call using the service
       const res = await resetPasswordConfirm({
         token,
         email,
@@ -62,12 +77,10 @@ const ResetPasswordPage = () => {
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setStatus("error");
-      // catch-il varum string-ai message-aga set seiyavum
       setMessage(err);
     }
   };
 
-  // Strength checker logic
   const passwordStrength = (pass) => {
     if (!pass) return 0;
     let score = 0;
@@ -84,27 +97,18 @@ const ResetPasswordPage = () => {
   return (
     <div className="min-h-screen bg-brand-soft flex items-center justify-center px-4">
       <div className="bg-brand-light rounded-2xl shadow-xl w-full max-w-md p-8">
-
-        {/* Logo */}
+       
         <div className="flex flex-col items-center mb-6">
-          <img
-            src="/logo.webp"
-            alt="Lough Skin"
-            className="h-16 mb-4"
-          />
-          <h1 className="text-2xl font-semibold text-brand">
-            Reset Password
-          </h1>
+          <img src="/logo.webp" alt="Lough Skin" className="h-16 mb-4" />
+          <h1 className="text-2xl font-semibold text-brand">Reset Password</h1>
           <p className="text-sm text-brand/80 text-center mt-1">
             Enter your new password
           </p>
         </div>
 
-        {/* Email - Read Only */}
+        
         <div className="mb-6">
-          <label className="block text-sm text-brand mb-1">
-            Email
-          </label>
+          <label className="block text-sm text-brand mb-1">Email</label>
           <input
             type="email"
             value={email || ""}
@@ -114,13 +118,9 @@ const ResetPasswordPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* New Password */}
+          
           <div>
-            <label className="block text-sm text-brand mb-1">
-              New Password
-            </label>
-
+            <label className="block text-sm text-brand mb-1">New Password</label>
             <div className="relative">
               <input
                 type={showPass ? "text" : "password"}
@@ -128,8 +128,9 @@ const ResetPasswordPage = () => {
                 required
                 value={form.newPassword}
                 onChange={handleChange}
-                disabled={status === "success" || !token || !email}
-                className="w-full px-4 py-2 rounded-xl border border-brand/30 focus:outline-none focus:ring-2 focus:ring-brand"
+                
+                disabled={status === "success" || status === "error" || !token || !email}
+                className="w-full px-4 py-2 rounded-xl border border-brand/30 focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50"
                 placeholder="Enter new password"
               />
               <button
@@ -141,7 +142,6 @@ const ResetPasswordPage = () => {
               </button>
             </div>
 
-            {/* Strength Bar */}
             {form.newPassword && (
               <div className="mt-3">
                 <div className="flex gap-2 mb-1">
@@ -149,26 +149,19 @@ const ResetPasswordPage = () => {
                     <div
                       key={i}
                       className={`h-2 flex-1 rounded-full ${
-                        i <= strength
-                          ? "bg-brand"
-                          : "bg-brand-soft"
+                        i <= strength ? "bg-brand" : "bg-brand-soft"
                       }`}
                     />
                   ))}
                 </div>
-                <p className="text-xs text-brand">
-                  {strengthLabels[strength]}
-                </p>
+                <p className="text-xs text-brand">{strengthLabels[strength]}</p>
               </div>
             )}
           </div>
 
-          {/* Confirm Password */}
+          
           <div>
-            <label className="block text-sm text-brand mb-1">
-              Confirm Password
-            </label>
-
+            <label className="block text-sm text-brand mb-1">Confirm Password</label>
             <div className="relative">
               <input
                 type={showConfirm ? "text" : "password"}
@@ -176,8 +169,8 @@ const ResetPasswordPage = () => {
                 required
                 value={form.confirmPassword}
                 onChange={handleChange}
-                disabled={status === "success" || !token || !email}
-                className="w-full px-4 py-2 rounded-xl border border-brand/30 focus:outline-none focus:ring-2 focus:ring-brand"
+                disabled={status === "success" || status === "error" || !token || !email}
+                className="w-full px-4 py-2 rounded-xl border border-brand/30 focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50"
                 placeholder="Confirm password"
               />
               <button
@@ -188,41 +181,30 @@ const ResetPasswordPage = () => {
                 {showConfirm ? "Hide" : "Show"}
               </button>
             </div>
-
-            {form.confirmPassword &&
-              form.newPassword !== form.confirmPassword && (
-                <p className="text-xs text-red-500 mt-1">
-                  Passwords do not match
-                </p>
-              )}
+            {form.confirmPassword && form.newPassword !== form.confirmPassword && (
+              <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+            )}
           </div>
 
-          {/* Status Messages */}
+          
           {message && (
             <div
               className={`text-sm p-3 rounded-lg ${
-                status === "success"
-                  ? "bg-green-100 text-green-600"
-                  : "bg-red-100 text-red-600"
+                status === "success" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
               }`}
             >
               {message}
             </div>
           )}
 
-          {/* Submit Button */}
+         
           <button
             type="submit"
-            disabled={
-              status === "loading" ||
-              status === "success" ||
-              !token ||
-              !email
-            }
-            className="w-full py-2 rounded-xl bg-brand text-white font-medium transition hover:opacity-90 disabled:opacity-50"
+            disabled={status === "loading" || status === "success" || status === "error" || !token || !email}
+            className="w-full py-2 rounded-xl bg-brand text-white font-medium transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {status === "loading"
-              ? "Resetting..."
+              ? "Verifying..."
               : status === "success"
               ? "Done! Redirecting..."
               : "Reset Password"}

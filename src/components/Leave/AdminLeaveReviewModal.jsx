@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { X, CheckCircle, XCircle, Loader2, Clock } from 'lucide-react';
 import { leaveService } from '../../api/leaveService';
 import toast from 'react-hot-toast';
 
+const toMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 
+const getDuration = (leave) => {
+  if (leave.isHourly && leave.startTime && leave.endTime) {
+    const mins = toMins(leave.endTime) - toMins(leave.startTime);
+    if (mins <= 0) return null;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}h${m > 0 ? ` ${m}min` : ''}` : `${m} min`;
+  }
+  const days = Math.ceil((new Date(leave.endDate) - new Date(leave.startDate)) / 86400000) + 1;
+  return `${days} day${days > 1 ? 's' : ''}`;
+};
 
 const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
   const [adminNote, setAdminNote] = useState('');
-  const [loading, setLoading]     = useState(false);
+  const [loading,   setLoading]   = useState(false);
 
-  const staff = leave?.staffId?.userId;
+  const staff    = leave?.staffId?.userId;
+  const duration = getDuration(leave);
 
   const handleReview = async (status) => {
     setLoading(true);
@@ -25,22 +38,21 @@ const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
     }
   };
 
-  const days = Math.ceil((new Date(leave?.endDate) - new Date(leave?.startDate)) / 86400000) + 1;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-md p-8 relative">
-        <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-gray-700">
+        <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 transition">
           <X size={20} />
         </button>
 
         <h2 className="text-xl font-black text-gray-900 mb-1">Review Leave Request</h2>
         <p className="text-xs text-gray-500 mb-6">Approve or reject this staff leave request</p>
 
-        {/* Staff info */}
-        <div className="bg-[#F5EDE4] rounded-2xl p-4 mb-5 flex flex-col gap-2">
+        {/* Staff + leave info */}
+        <div className="bg-[#F5EDE4] rounded-2xl p-4 mb-5 flex flex-col gap-3">
+          {/* Staff avatar row */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black">
+            <div className="w-10 h-10 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black text-sm shrink-0">
               {staff?.firstName?.charAt(0)}
             </div>
             <div>
@@ -48,11 +60,39 @@ const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
               <p className="text-xs text-gray-400">{staff?.email}</p>
             </div>
           </div>
-          <div className="mt-1 text-sm text-gray-700 flex flex-col gap-1">
-            <span><strong>Type:</strong>  {leave?.type?.charAt(0).toUpperCase() + leave?.type?.slice(1)}</span>
-            <span><strong>Duration:</strong> {days} day{days > 1 ? 's' : ''}</span>
-            <span><strong>From:</strong> {new Date(leave?.startDate).toDateString()}</span>
-            <span><strong>To:</strong>   {new Date(leave?.endDate).toDateString()}</span>
+
+          {/* Leave details */}
+          <div className="text-sm text-gray-700 flex flex-col gap-1.5">
+            {/* Type + hourly badge */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span>
+                <strong>Type:</strong> {leave?.type?.charAt(0).toUpperCase() + leave?.type?.slice(1)} Leave
+              </span>
+              {leave.isHourly && (
+                <span className="text-[9px] font-black text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Clock size={9} /> Hourly
+                </span>
+              )}
+            </div>
+
+            {/* Duration */}
+            {duration && (
+              <span><strong>Duration:</strong> {duration}</span>
+            )}
+
+            {/* Date / time */}
+            {leave.isHourly ? (
+              <>
+                <span><strong>Date:</strong> {new Date(leave.startDate).toDateString()}</span>
+                <span><strong>Time:</strong> {leave.startTime} – {leave.endTime}</span>
+              </>
+            ) : (
+              <>
+                <span><strong>From:</strong> {new Date(leave.startDate).toDateString()}</span>
+                <span><strong>To:</strong> {new Date(leave.endDate).toDateString()}</span>
+              </>
+            )}
+
             {leave?.reason && <span><strong>Reason:</strong> {leave.reason}</span>}
           </div>
         </div>
@@ -62,7 +102,7 @@ const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 block">
             Note to Staff (sent via email)
           </label>
-          <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)}
+          <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)}
             placeholder="Optional note included in the email..." rows={3} maxLength={500}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] resize-none" />
         </div>
