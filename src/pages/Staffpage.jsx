@@ -100,8 +100,9 @@ const StaffPage = () => {
           const maxPage = Math.max(1, Math.ceil(newFiltered.length / ITEMS_PER_PAGE));
           return prev > maxPage ? maxPage : prev;
         });
-      } catch {
-        toast.error('Delete failed', { id: delId });
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || 'Delete failed. Please try again.';
+        toast.error(errorMessage, { id: delId });
       }
     }
   };
@@ -207,11 +208,10 @@ const StaffPage = () => {
                           )}
                           <button
                             onClick={() => goTo(page)}
-                            className={`w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all shadow-sm ${
-                              page === currentPage
+                            className={`w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all shadow-sm ${page === currentPage
                                 ? 'bg-brand text-white shadow-brand/25 shadow-lg scale-105'
                                 : 'bg-white/70 border border-white text-gray-400 hover:text-brand hover:border-brand/30 hover:bg-brand/5'
-                            }`}
+                              }`}
                           >
                             {page}
                           </button>
