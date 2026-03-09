@@ -24,7 +24,7 @@ import AdminBookingPage from './pages/BookingPage';
 
 import StaffDashboard  from './pages/dashboard/StaffDashboard';
 import StaffLeavePage  from './pages/StaffLeavePage'; 
-
+import UnauthorizedPage from './pages/UnauthorizedPage';
 const App = () => {
   return (
     <BrowserRouter>
@@ -69,7 +69,7 @@ const App = () => {
 
          
           <Route path="/" element={<Navigate to="/login" replace />} />
-
+           <Route path="/unauthorized" element={<UnauthorizedPage />} />
         </Routes>
       </SilentRefresh>
     </BrowserRouter>
