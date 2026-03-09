@@ -33,9 +33,9 @@ const StaffCard = ({ staff, onView, onEdit, onToggle, onDelete, onResendInvite }
             <p className="text-[11px] text-gray-400 font-medium truncate mt-0.5">{u.email}</p>
           </div>
         </div>
-        <button onClick={onToggle} className="p-1 shrink-0">
+        {/* <button onClick={onToggle} className="p-1 shrink-0">
           {isActive ? <ToggleRight className="w-7 h-7 text-emerald-500" /> : <ToggleLeft className="w-7 h-7 text-gray-300" />}
-        </button>
+        </button> */}
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-4">
@@ -77,9 +77,9 @@ const StaffCard = ({ staff, onView, onEdit, onToggle, onDelete, onResendInvite }
       <div className="flex gap-2 pt-4 border-t border-gray-100">
         <button onClick={onView} className="flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest bg-[#F5EDE4] hover:bg-brand/10 text-gray-500 hover:text-brand rounded-xl transition-colors">View</button>
         <button onClick={onEdit} className="p-2.5 rounded-xl bg-brand/10 hover:bg-brand/20 text-brand transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
-        {isPending && (
+        {/* {isPending && (
           <button onClick={onResendInvite} className="p-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-500 transition-colors"><RefreshCw className="w-3.5 h-3.5" /></button>
-        )}
+        )} */}
         <button onClick={onDelete} className="p-2.5 rounded-xl bg-[#B62025]/10 hover:bg-[#B62025]/20 text-[#B62025] dark:text-[#FF4B4B] transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
       </div>
     </div>
