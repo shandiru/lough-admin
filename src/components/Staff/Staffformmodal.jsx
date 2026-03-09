@@ -14,7 +14,6 @@ const TABS = [
   { key: 'hours',    label: 'Hours',    icon: Clock },
 ];
 
-// ── Validation regexes ──
 const UK_PHONE_REGEX = /^(07\d{3} \d{6}|(\+44\s?7\d{3}\s?\d{6}))$/;
 const EMAIL_REGEX    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -24,10 +23,10 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
   const [tab, setTab] = useState('personal');
   const [loading, setLoading] = useState(false);
 
-  // ── Field-level errors ──
+  
   const [errors, setErrors] = useState({ firstName: '', lastName: '', email: '', phone: '' });
 
-  // ── Form state ──
+ 
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -42,7 +41,7 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
     workingHours: defaultWorkingHours(),
   });
 
-  // Populate when editing
+
   useEffect(() => {
     if (isEditing && editData) {
       const u = editData.userId || {};
@@ -234,7 +233,7 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
                     className={errors.firstName ? inpErr : inp}
                     value={form.firstName}
                     onChange={e => handleFirstNameChange(e.target.value)}
-                    disabled={isEditing && !!editData?.userId?.email}
+                   
                   />
                   <Hint field="firstName" />
                 </div>
@@ -259,7 +258,7 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
                   className={errors.email ? inpErr : inp}
                   value={form.email}
                   onChange={e => handleEmailChange(e.target.value)}
-                  disabled={isEditing}
+                 
                 />
                 {isEditing
                   ? <p className="text-[10px] text-gray-400 mt-1 ml-2">Email cannot be changed after creation</p>

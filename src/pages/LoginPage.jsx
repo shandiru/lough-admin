@@ -25,22 +25,22 @@ const LoginPage = () => {
     dispatch(clearError());
 
     try {
-      // 1. Logic-ah service file-ku thalliyachu
+      
       const data = await loginUser(form);
       
       const { accessToken, user } = data;
 
-      // 2. Redux state update
+   
       dispatch(loginSuccess({ accessToken, user }));
 
-      // 3. Role based redirect
+   
       if (user.role === "admin") {
         navigate("/dashboard/admin");
       } else {
         navigate("/dashboard/staff");
       }
     } catch (err) {
-      // Catch-la vara 'err' ippo direct string message-ah irukkum
+     
       setStatus("error");
       setMessage(err);
       dispatch(setError(err));
@@ -58,7 +58,7 @@ const LoginPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email Box */}
+       
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
@@ -72,7 +72,7 @@ const LoginPage = () => {
             />
           </div>
 
-          {/* Password Box */}
+        
           <div>
             <div className="flex justify-between mb-1">
               <label className="text-sm font-medium text-gray-700">Password</label>
@@ -94,14 +94,14 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Error Message Display */}
+         
           {message && (
             <div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               {message}
             </div>
           )}
 
-          {/* Submit Button */}
+         
           <button
             type="submit"
             disabled={status === "loading"}
