@@ -11,6 +11,7 @@ import SetupPasswordPage  from './pages/SetupPasswordPage';
 import LoginPage          from './pages/LoginPage';
 import ForgotPasswordPage from './pages/Forgotpasswordpage';
 import ResetPasswordPage  from './pages/ResetPasswordPages';
+import VerifyEmailChangePage from './pages/VerifyEmailChangePage';
 
 
 import AdminDashboard  from './pages/dashboard/AdminDashboard';
@@ -36,6 +37,7 @@ const App = () => {
           <Route path="/login"           element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
           <Route path="/reset-password"  element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
+          <Route path="/verify-email-change" element={<VerifyEmailChangePage />} />
 
           
           <Route path="/dashboard/admin" element={

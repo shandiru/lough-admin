@@ -155,8 +155,12 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
     const payload = { ...form, specializations: form.specializations.split(',').map(s => s.trim()).filter(Boolean) };
     try {
       if (isEditing) {
-        await axiosInstance.put(`/staff/${editData._id}`, payload);
-        toast.success('Staff updated!');
+        const res = await axiosInstance.put(`/staff/${editData._id}`, payload);
+        if (res.data.emailChangeInitiated) {
+          toast.success('Staff updated! Verification email sent to new address. Login blocked until verified.', { duration: 5000 });
+        } else {
+          toast.success('Staff updated!');
+        }
       } else {
         const res = await axiosInstance.post('/staff', payload);
         toast.success(res.data.message || 'Staff created & invite sent!');
@@ -258,12 +262,14 @@ const StaffFormModal = ({ services = [], editData = null, onClose, onSuccess }) 
                   className={errors.email ? inpErr : inp}
                   value={form.email}
                   onChange={e => handleEmailChange(e.target.value)}
-                 
                 />
-                {isEditing
-                  ? <p className="text-[10px] text-gray-400 mt-1 ml-2">Email cannot be changed after creation</p>
-                  : <Hint field="email" grey="Must be a valid email address" />
-                }
+                {isEditing ? (
+                  <p className="text-[10px] text-amber-500 mt-1.5 ml-2 font-semibold">
+                    ⚠ Changing email will require the staff member to verify the new address before they can log in.
+                  </p>
+                ) : (
+                  <Hint field="email" grey="Must be a valid email address" />
+                )}
               </div>
 
               {/* Phone */}
