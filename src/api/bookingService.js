@@ -5,9 +5,10 @@ export const getAllBookings = async () => {
   return res.data;
 };
 
-export const getAvailableSlotsAdmin = async (serviceId, date, customerGender) => {
+export const getAvailableSlotsAdmin = async (serviceId, date, customerGender, staffGenderPreference) => {
   const params = new URLSearchParams({ serviceId, date });
-  if (customerGender) params.append('customerGender', customerGender);
+  if (customerGender)                                            params.append('customerGender', customerGender);
+  if (staffGenderPreference && staffGenderPreference !== 'any') params.append('staffGenderPreference', staffGenderPreference);
   const res = await axiosInstance.get(`/bookings/available-slots?${params}`);
   return res.data;
 };

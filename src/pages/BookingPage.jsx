@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import {
   CalendarCheck, Plus, X, Loader2, ChevronLeft, ChevronRight,
-  User, Phone, MapPin, StickyNote, AlertCircle, CheckCircle2,
-  Clock, PoundSterling, Search, Filter
+  User, Users, Phone, MapPin, StickyNote, AlertCircle, CheckCircle2,
+  Clock, Search,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { serviceApi } from '../api/serviceApi';
@@ -76,30 +76,37 @@ function CreateBookingModal({ services, onClose, onCreated }) {
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
-    customerName: '', customerEmail: '', customerPhone: '',
-    customerAddress: '', customerGender: '', customerNotes: '',
-    serviceId: '', internalNotes: '',
+    customerName:          '',
+    customerEmail:         '',
+    customerPhone:         '',
+    customerAddress:       '',
+    customerGender:        '',   // stored in state, used for filtering
+    staffGenderPreference: 'any',
+    customerNotes:         '',
+    serviceId:             '',
+    internalNotes:         '',
   });
 
-  const [selectedDate, setSelectedDate]   = useState('');
-  const [slotsData, setSlotsData]         = useState([]);
-  const [loadingSlots, setLoadingSlots]   = useState(false);
+  const [selectedDate,  setSelectedDate]  = useState('');
+  const [slotsData,     setSlotsData]     = useState([]);
+  const [loadingSlots,  setLoadingSlots]  = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
-  const [selectedTime, setSelectedTime]   = useState('');
+  const [selectedTime,  setSelectedTime]  = useState('');
 
   const selectedService = services.find(s => s._id === form.serviceId);
 
+  // Re-fetch slots when date, service, customerGender, or staffGenderPreference changes
   useEffect(() => {
     if (!selectedDate || !form.serviceId) return;
     setLoadingSlots(true);
     setSlotsData([]);
     setSelectedStaff(null);
     setSelectedTime('');
-    getAvailableSlotsAdmin(form.serviceId, selectedDate, form.customerGender)
+    getAvailableSlotsAdmin(form.serviceId, selectedDate, form.customerGender, form.staffGenderPreference)
       .then(res => setSlotsData(res.data || res))
       .catch(() => setSlotsData([]))
       .finally(() => setLoadingSlots(false));
-  }, [selectedDate, form.serviceId, form.customerGender]);
+  }, [selectedDate, form.serviceId, form.customerGender, form.staffGenderPreference]);
 
   const handleField = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -112,9 +119,9 @@ function CreateBookingModal({ services, onClose, onCreated }) {
     try {
       const res = await createBookingAdmin({
         ...form,
-        staffId: selectedStaff._id,
-        bookingDate: selectedDate,
-        bookingTime: selectedTime,
+        staffId:      selectedStaff._id,
+        bookingDate:  selectedDate,
+        bookingTime:  selectedTime,
         bookingSource: 'admin',
       });
       toast.success('Booking created!');
@@ -157,14 +164,15 @@ function CreateBookingModal({ services, onClose, onCreated }) {
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Step 0 */}
+
+          {/* ── Step 0: Customer & Service ─────────────────────────────────── */}
           {step === 0 && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  ['customerName',  'Full Name',    'text',  'Jane Smith'],
-                  ['customerEmail', 'Email',        'email', 'jane@example.com'],
-                  ['customerPhone', 'Phone',        'text',  '07700 900000'],
+                  ['customerName',  'Full Name', 'text',  'Jane Smith'],
+                  ['customerEmail', 'Email',     'email', 'jane@example.com'],
+                  ['customerPhone', 'Phone',     'text',  '07700 900000'],
                 ].map(([k, label, type, ph]) => (
                   <div key={k}>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{label}</label>
@@ -172,17 +180,35 @@ function CreateBookingModal({ services, onClose, onCreated }) {
                       placeholder={ph} className={inputCls} />
                   </div>
                 ))}
+
+                {/* Customer gender — stored in state, drives staff filtering */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Gender</label>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block flex items-center gap-1">
+                    <User size={12} /> Customer Gender
+                  </label>
                   <select value={form.customerGender} onChange={e => handleField('customerGender', e.target.value)} className={inputCls}>
-                    <option value="">Select</option>
+                    <option value="">Select gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="other">Other</option>
                     <option value="prefer-not-to-say">Prefer not to say</option>
                   </select>
                 </div>
+
+                {/* Staff gender preference — admin can set on behalf of customer */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block flex items-center gap-1">
+                    <Users size={12} /> Preferred Staff Gender
+                  </label>
+                  <select value={form.staffGenderPreference} onChange={e => handleField('staffGenderPreference', e.target.value)} className={inputCls}>
+                    <option value="any">No preference</option>
+                    <option value="female">Female staff only</option>
+                    <option value="male">Male staff only</option>
+                  </select>
+                </div>
               </div>
+
+              {/* Service */}
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Service</label>
                 <select value={form.serviceId} onChange={e => handleField('serviceId', e.target.value)} className={inputCls}>
@@ -192,21 +218,30 @@ function CreateBookingModal({ services, onClose, onCreated }) {
                   ))}
                 </select>
               </div>
+
+              {/* Address */}
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Address (optional)</label>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block flex items-center gap-1">
+                  <MapPin size={12} /> Address (optional)
+                </label>
                 <input value={form.customerAddress} onChange={e => handleField('customerAddress', e.target.value)}
-                  placeholder="123 High Street" className={inputCls} />
+                  placeholder="123 High Street, London" className={inputCls} />
               </div>
+
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Customer Notes (optional)</label>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block flex items-center gap-1">
+                  <StickyNote size={12} /> Customer Notes (optional)
+                </label>
                 <textarea value={form.customerNotes} onChange={e => handleField('customerNotes', e.target.value)}
                   rows={2} className={inputCls + ' resize-none'} />
               </div>
+
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Internal Notes (admin only)</label>
                 <textarea value={form.internalNotes} onChange={e => handleField('internalNotes', e.target.value)}
                   rows={2} className={inputCls + ' resize-none'} />
               </div>
+
               <button disabled={!canStep0} onClick={() => setStep(1)}
                 className="w-full bg-[#22B8C8] text-white py-3 rounded-xl font-bold disabled:opacity-40">
                 Next →
@@ -214,7 +249,7 @@ function CreateBookingModal({ services, onClose, onCreated }) {
             </>
           )}
 
-          {/* Step 1 */}
+          {/* ── Step 1: Date & Time ────────────────────────────────────────── */}
           {step === 1 && (
             <>
               <MonthCalendar selected={selectedDate} onSelect={setSelectedDate} />
@@ -243,7 +278,16 @@ function CreateBookingModal({ services, onClose, onCreated }) {
                           {staff.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-gray-700">{staff.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-gray-700">{staff.name}</p>
+                            {staff.gender && (
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full capitalize
+                                ${staff.gender === 'female' ? 'bg-pink-50 text-pink-500' :
+                                  staff.gender === 'male'   ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'}`}>
+                                {staff.gender}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-400">{availableSlots.length} slots</p>
                         </div>
                         {selectedStaff?._id === staff._id && <CheckCircle2 size={18} className="text-[#22B8C8] ml-auto" />}
@@ -276,23 +320,28 @@ function CreateBookingModal({ services, onClose, onCreated }) {
             </>
           )}
 
-          {/* Step 2 */}
+          {/* ── Step 2: Confirm ───────────────────────────────────────────── */}
           {step === 2 && (
             <>
               <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
-                <Row label="Service"   value={selectedService?.name} />
-                <Row label="Date"      value={selectedDate} />
-                <Row label="Time"      value={selectedTime} />
-                <Row label="Staff"     value={selectedStaff?.name} />
-                <Row label="Duration"  value={`${selectedService?.duration} min`} />
-                <Row label="Price"     value={`£${selectedService?.price}`} />
+                <Row label="Service"    value={selectedService?.name} />
+                <Row label="Date"       value={selectedDate} />
+                <Row label="Time"       value={selectedTime} />
+                <Row label="Staff"      value={selectedStaff?.name} />
+                <Row label="Duration"   value={`${selectedService?.duration} min`} />
+                <Row label="Price"      value={`£${selectedService?.price}`} />
                 <div className="border-t pt-2 mt-2" />
-                <Row label="Customer"  value={form.customerName} />
-                <Row label="Email"     value={form.customerEmail} />
-                <Row label="Phone"     value={form.customerPhone} />
-                <Row label="Gender"    value={form.customerGender} />
-                {form.customerAddress && <Row label="Address"  value={form.customerAddress} />}
+                <Row label="Customer"   value={form.customerName} />
+                <Row label="Email"      value={form.customerEmail} />
+                <Row label="Phone"      value={form.customerPhone} />
+                <Row label="Gender"     value={form.customerGender} />
+                <Row label="Staff Pref" value={form.staffGenderPreference === 'any' ? 'No preference' : `${form.staffGenderPreference} only`} />
+                {form.customerAddress && <Row label="Address"    value={form.customerAddress} />}
                 {form.internalNotes   && <Row label="Int. Notes" value={form.internalNotes} />}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-2 text-xs text-blue-700">
+                <Clock size={14} /> Admin bookings are confirmed immediately — no payment required.
               </div>
 
               {error && (
@@ -319,6 +368,7 @@ function CreateBookingModal({ services, onClose, onCreated }) {
 }
 
 function Row({ label, value }) {
+  if (!value) return null;
   return (
     <div className="flex justify-between">
       <span className="text-gray-400">{label}</span>
@@ -329,11 +379,11 @@ function Row({ label, value }) {
 
 // ── Main Booking Page ─────────────────────────────────────────────────────────
 const AdminBookingPage = () => {
-  const [bookings, setBookings]       = useState([]);
-  const [services, setServices]       = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [showModal, setShowModal]     = useState(false);
-  const [search, setSearch]           = useState('');
+  const [bookings, setBookings]         = useState([]);
+  const [services, setServices]         = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [showModal, setShowModal]       = useState(false);
+  const [search, setSearch]             = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => { loadData(); }, []);
@@ -370,7 +420,6 @@ const AdminBookingPage = () => {
       <Toaster position="top-right" />
 
       <main className="flex-1 overflow-auto p-6">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Bookings</h1>
@@ -384,7 +433,6 @@ const AdminBookingPage = () => {
           </button>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -406,7 +454,6 @@ const AdminBookingPage = () => {
           </select>
         </div>
 
-        {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 size={28} className="animate-spin text-[#22B8C8]" />
@@ -417,7 +464,7 @@ const AdminBookingPage = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
-                    {['Booking #', 'Customer', 'Service', 'Staff', 'Date & Time', 'Status', 'Total'].map(h => (
+                    {['Booking #', 'Customer', 'Service', 'Staff', 'Date & Time', 'Status', 'Total', 'Paid'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -425,9 +472,7 @@ const AdminBookingPage = () => {
                 <tbody className="divide-y divide-gray-50">
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-12 text-gray-400">
-                        No bookings found.
-                      </td>
+                      <td colSpan={8} className="text-center py-12 text-gray-400">No bookings found.</td>
                     </tr>
                   ) : filtered.map(b => (
                     <tr key={b._id} className="hover:bg-gray-50 transition-colors">
@@ -453,6 +498,11 @@ const AdminBookingPage = () => {
                       </td>
                       <td className="px-4 py-3 font-bold text-gray-800">
                         £{(b.totalAmount / 100).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold ${b.paymentStatus === 'paid' ? 'text-green-500' : 'text-amber-500'}`}>
+                          {b.paymentStatus === 'paid' ? `£${(b.paidAmount/100).toFixed(2)} paid` : b.paymentStatus}
+                        </span>
                       </td>
                     </tr>
                   ))}
