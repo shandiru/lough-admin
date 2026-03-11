@@ -2,11 +2,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
 import axiosInstance from '../api/axiosInstance';
 import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom'; // 1. useNavigate import pannunga
+import { useNavigate } from 'react-router-dom'; 
 
 export const useAuth = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // 2. navigate function-ai initialize pannunga
+  const navigate = useNavigate(); 
   const { user, accessToken, isLoading } = useSelector((state) => state.auth);
 
   const isAuthenticated = !!accessToken;
@@ -37,13 +37,9 @@ export const useAuth = () => {
       } catch (e) {
         console.error("Logout error", e);
       } finally {
-        // 3. Redux state-ai clear panrom
+      
         dispatch(logout());
-        
-        // 4. Page reload illaama smooth-a redirect panrom
         navigate('/login', { replace: true }); 
-        
-        // SweetAlert-ai close panna
         Swal.close();
       }
     }

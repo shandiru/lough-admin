@@ -4,7 +4,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: {
     accessToken: null,
-    user: null,      // { name, role, profileImage }
+    user: null,     
     isLoading: false,
     error: null,
   },
@@ -31,7 +31,7 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    // Merge partial updates (name, profileImage) without touching accessToken
+   
     updateUserProfile: (state, action) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
