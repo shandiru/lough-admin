@@ -27,3 +27,15 @@ export const updateStatus = async (bookingId, status) => {
   const res = await axiosInstance.patch(`/bookings/${bookingId}/status`, { status });
   return res.data;
 };
+
+export const adminCancelBooking = async (bookingId, { refundAmount = 0, reason = '', internalNotes = '' }) => {
+  const res = await axiosInstance.post(`/bookings/${bookingId}/admin-cancel`, { refundAmount, reason, internalNotes });
+  return res.data;
+};
+
+export const getCalendarBookings = async (startDate, endDate, staffId = '') => {
+  const params = new URLSearchParams({ startDate, endDate });
+  if (staffId) params.append('staffId', staffId);
+  const res = await axiosInstance.get(`/bookings/calendar?${params}`);
+  return res.data;
+};
