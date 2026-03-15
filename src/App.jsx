@@ -24,6 +24,7 @@ import AdminBookingPage from './pages/BookingPage';
 
 import StaffDashboard  from './pages/dashboard/StaffDashboard';
 import StaffLeavePage  from './pages/StaffLeavePage'; 
+import StaffBookingPage from './pages/StaffBookingPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 const App = () => {
   return (
@@ -65,6 +66,9 @@ const App = () => {
           } />
           <Route path="/dashboard/staff/leaves" element={
             <ProtectedRoute allowedRoles={['staff']}><StaffLeavePage /></ProtectedRoute>
+          } />
+          <Route path="/dashboard/staff/bookings" element={
+            <ProtectedRoute allowedRoles={['staff']}><StaffBookingPage /></ProtectedRoute>
           } />
 
          
