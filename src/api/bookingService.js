@@ -23,8 +23,10 @@ export const reviewCancelRequest = async (bookingId, { action, refundAmount, adm
   return res.data;
 };
 
-export const updateStatus = async (bookingId, status) => {
-  const res = await axiosInstance.patch(`/bookings/${bookingId}/status`, { status });
+export const updateStatus = async (bookingId, status, balanceReceived) => {
+  const payload = { status };
+  if (balanceReceived !== undefined) payload.balanceReceived = balanceReceived;
+  const res = await axiosInstance.patch(`/bookings/${bookingId}/status`, payload);
   return res.data;
 };
 
