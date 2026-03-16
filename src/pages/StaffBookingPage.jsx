@@ -232,7 +232,7 @@ export default function StaffBookingPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const r = await axiosInstance.get('/bookings/my');
+      const r = await axiosInstance.get('/bookings/staff/my');
       setBookings(Array.isArray(r.data) ? r.data : []);
     } catch {
       toast.error('Failed to load bookings');
