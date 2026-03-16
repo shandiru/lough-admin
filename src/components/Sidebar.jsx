@@ -68,16 +68,19 @@ const Sidebar = () => {
     <>
 
       <aside
-        className={`h-screen bg-[#cbb49c] text-[#22b8c7] flex flex-col transition-all duration-300 ${
+        className={`h-screen bg-[#cbb49c] text-[#3b1f0e] flex flex-col transition-all duration-300 ${
           collapsed ? "w-16" : "w-60"
         }`}
       >
         {/* Brand */}
-        <div className="flex items-center justify-between p-4 border-b border-white/40">
+        <div className="flex items-center justify-between p-4 border-b border-[#a08060]/40">
           {!collapsed && (
             <img src="/logo.webp" alt="Lough Skin" className="h-12 w-auto" />
           )}
-          <button onClick={() => setCollapsed(!collapsed)}>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-[#3b1f0e] hover:text-[#22b8c7] transition-colors"
+          >
             {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
           </button>
         </div>
@@ -88,8 +91,8 @@ const Sidebar = () => {
             <div className="flex items-center gap-3">
               <AvatarCircle />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-[#1f8e9a] truncate">{name}</p>
-                <p className="text-xs text-[#1f8e9a]/70">{role?.toUpperCase()}</p>
+                <p className="text-sm font-semibold text-[#3b1f0e] truncate">{name}</p>
+                <p className="text-xs text-[#3b1f0e]/60">{role?.toUpperCase()}</p>
               </div>
             </div>
           </div>
@@ -112,11 +115,13 @@ const Sidebar = () => {
                 key={link.path}
                 to={link.path}
                 className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all ${
-                  isActive ? "bg-[#22b8c7] text-white shadow-md" : "hover:bg-white/40"
+                  isActive
+                    ? "bg-[#22b8c7] text-white shadow-md"
+                    : "text-[#3b1f0e] hover:bg-white/50 hover:text-[#22b8c7]"
                 }`}
               >
                 <Icon size={18} />
-                {!collapsed && <span>{link.label}</span>}
+                {!collapsed && <span className="font-medium">{link.label}</span>}
               </Link>
             );
           })}
@@ -126,10 +131,10 @@ const Sidebar = () => {
         <div className="p-3">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-2 rounded-xl hover:bg-white/40 transition"
+            className="flex items-center gap-3 w-full px-4 py-2 rounded-xl text-[#3b1f0e] hover:bg-white/50 hover:text-[#22b8c7] transition-colors"
           >
             <FiLogOut size={18} />
-            {!collapsed && <span>Logout</span>}
+            {!collapsed && <span className="font-medium">Logout</span>}
           </button>
         </div>
       </aside>
