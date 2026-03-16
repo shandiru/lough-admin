@@ -31,7 +31,7 @@ function TodayAppointments() {
   const todayStr = isoDate(new Date());
 
   useEffect(() => {
-    axiosInstance.get('/bookings/my')
+    axiosInstance.get('/bookings/staff/my')
       .then(r => {
         const all = Array.isArray(r.data) ? r.data : [];
         const today = all
@@ -136,7 +136,7 @@ const StaffDashboard = () => {
 
     checkStatus();
 
-    axiosInstance.get('/bookings/my')
+    axiosInstance.get('/bookings/staff/my')
       .then(r => {
         const all = Array.isArray(r.data) ? r.data : [];
         const todayStr = isoDate(new Date());
