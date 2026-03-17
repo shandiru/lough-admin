@@ -27,15 +27,28 @@ const statusCls = {
 };
 
 const inputCls = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-[#22B8C8] focus:ring-2 focus:ring-[#22B8C8]/10 bg-gray-50 transition-all';
+const inputErrCls = 'w-full border border-red-400 rounded-xl px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 bg-gray-50 transition-all';
 
 function toMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
 function fromMins(m) { return `${Math.floor(m/60).toString().padStart(2,'0')}:${(m%60).toString().padStart(2,'0')}`; }
 function isoDate(d) { return d instanceof Date ? d.toISOString().split('T')[0] : new Date(d).toISOString().split('T')[0]; }
 function addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 
+// ── UK Phone Validator ─────────────────────────────────────────────────────
+function isValidUKPhone(v) {
+  const s = v.replace(/[\s\-().]/g, '');
+  if (/^07\d{9}$/.test(s)) return true;
+  if (/^\+447\d{9}$/.test(s)) return true;
+  if (/^0[1-3]\d{8,9}$/.test(s)) return true;
+  if (/^\+44[1-3]\d{8,9}$/.test(s)) return true;
+  return false;
+}
+
 // ── Mini calendar ─────────────────────────────────────────────────────────────
 function MonthCalendar({ selected, onSelect, disablePast=true }) {
   const today = new Date(); today.setHours(0,0,0,0);
+  // Admin: also block today — must book at least 1 day ahead
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
   const [vd, setVd] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const yr=vd.getFullYear(), mo=vd.getMonth();
   const cells=[];
@@ -56,16 +69,21 @@ function MonthCalendar({ selected, onSelect, disablePast=true }) {
         {cells.map((day,i)=>{
           if(!day) return <div key={`e-${i}`}/>;
           const iso=`${yr}-${String(mo+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-          const isPast=disablePast && new Date(yr,mo,day)<today;
+          const cellDate = new Date(yr,mo,day);
+          // Block today and past — only tomorrow onwards selectable
+          const isPast = disablePast && cellDate < tomorrow;
+          const isToday = cellDate.getTime() === today.getTime();
           const isSel=selected===iso;
           return (
             <button key={iso} disabled={isPast} onClick={()=>onSelect(iso)}
-              className={`aspect-square rounded-lg text-xs font-medium transition-all ${isPast?'text-gray-300 cursor-not-allowed':'hover:bg-[#22B8C8]/10'} ${isSel?'bg-[#22B8C8] text-white':'text-gray-700'}`}>
+              title={isToday ? 'Same-day bookings not available' : undefined}
+              className={`aspect-square rounded-lg text-xs font-medium transition-all ${isPast?'text-gray-300 cursor-not-allowed':'hover:bg-[#22B8C8]/10'} ${isToday?'ring-1 ring-gray-200':''} ${isSel?'bg-[#22B8C8] text-white':'text-gray-700'}`}>
               {day}
             </button>
           );
         })}
       </div>
+      <p className="text-[10px] text-gray-400 mt-2 text-center">Bookings require at least 1 day advance notice.</p>
     </div>
   );
 }
@@ -238,6 +256,7 @@ function CreateBookingModal({ services, onClose, onCreated }) {
   const [step,setStep]=useState(0);
   const [submitting,setSub]=useState(false);
   const [error,setError]=useState('');
+  const [phoneError,setPhoneError]=useState('');
   const [form,setForm]=useState({ customerName:'',customerEmail:'',customerPhone:'',customerAddress:'',customerGender:'',customerNotes:'',internalNotes:'',serviceId:'',staffGenderPreference:'any' });
   const [selectedDate,setDate]=useState('');
   const [slotsData,setSlots]=useState([]);
@@ -255,7 +274,7 @@ function CreateBookingModal({ services, onClose, onCreated }) {
   },[selectedDate,form.serviceId,form.customerGender,form.staffGenderPreference]);
 
   const hf=(k,v)=>setForm(f=>({...f,[k]:v}));
-  const canStep0=form.customerName&&form.customerEmail&&form.customerPhone&&form.customerGender&&form.serviceId;
+  const canStep0=form.customerName&&form.customerEmail&&form.customerPhone&&isValidUKPhone(form.customerPhone)&&form.customerGender&&form.serviceId;
   const canStep1=selectedDate&&selectedStaff&&selectedTime;
 
   const handleSubmit=async()=>{
@@ -287,7 +306,7 @@ function CreateBookingModal({ services, onClose, onCreated }) {
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2"><label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 block">Full Name *</label><input value={form.customerName} onChange={e=>hf('customerName',e.target.value)} placeholder="Jane Smith" className={inputCls}/></div>
               <div><label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 block">Email *</label><input value={form.customerEmail} onChange={e=>hf('customerEmail',e.target.value)} type="email" placeholder="jane@example.com" className={inputCls}/></div>
-              <div><label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 block">Phone *</label><input value={form.customerPhone} onChange={e=>hf('customerPhone',e.target.value)} placeholder="07700 900000" className={inputCls}/></div>
+              <div><label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 block">Phone (UK) *</label><input value={form.customerPhone} onChange={e=>{hf('customerPhone',e.target.value);if(e.target.value&&!isValidUKPhone(e.target.value))setPhoneError('Enter a valid UK number e.g. 07700 900000');else setPhoneError('');}} onBlur={e=>{if(e.target.value&&!isValidUKPhone(e.target.value))setPhoneError('Enter a valid UK number e.g. 07700 900000');}} placeholder="07700 900000" className={phoneError?inputErrCls:inputCls}/>{phoneError&&<p className="text-red-400 text-[11px] mt-1">{phoneError}</p>}</div>
               <div className="col-span-2"><label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 block">Address</label><input value={form.customerAddress} onChange={e=>hf('customerAddress',e.target.value)} placeholder="123 High St, London" className={inputCls}/></div>
               <div className="col-span-2"><label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 block">Service *</label>
                 <select value={form.serviceId} onChange={e=>{hf('serviceId',e.target.value);setDate('');setSlots([]);setSt(null);setTm('');}} className={inputCls}>
