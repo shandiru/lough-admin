@@ -14,6 +14,12 @@ import {
 const BRAND = '#22B8C8';
 const GOLD  = '#C9AF94';
 
+const getImageUrl = (src) => {
+  if (!src) return null;
+  if (src.startsWith('http')) return src;
+  return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`;
+};
+
 function toMins(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 function fromMins(m) { return `${Math.floor(m / 60).toString().padStart(2, '0')}:${(m % 60).toString().padStart(2, '0')}`; }
 
@@ -380,11 +386,15 @@ export default function AdminDashboard() {
                   {staffList.slice(0, 6).map(s => {
                     const u = s.userId;
                     const initials = u ? `${u.firstName?.[0] || ''}${u.lastName?.[0] || ''}`.toUpperCase() : '?';
+                    const profileImage = getImageUrl(u?.profileImage);
                     const isActive = u?.isActive;
                     return (
                       <div key={s._id} className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#22B8C8] to-[#C9AF94] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                          {initials}
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#22B8C8] to-[#C9AF94] text-white flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
+                          {profileImage
+                            ? <img src={profileImage} alt={initials} className="w-full h-full object-cover" />
+                            : initials
+                          }
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-800 truncate">

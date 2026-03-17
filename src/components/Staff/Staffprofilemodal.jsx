@@ -9,9 +9,16 @@ const GCAL_STATUS_STYLE = {
   error:        'bg-red-100 text-red-500',
 };
 
+const getImageUrl = (src) => {
+  if (!src) return null;
+  if (src.startsWith('http')) return src;
+  return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`;
+};
+
 const StaffProfileModal = ({ staff, onClose, onEdit }) => {
   const u = staff.userId || {};
   const initials = `${u.firstName?.[0] ?? ''}${u.lastName?.[0] ?? ''}`.toUpperCase();
+  const profileImage = getImageUrl(u.profileImage);
   const gcalStatus = staff.googleCalendarSyncStatus?.status || 'disconnected';
   const workingDays = DAYS.filter(d => staff.workingHours?.[d]?.isWorking);
 
@@ -23,8 +30,11 @@ const StaffProfileModal = ({ staff, onClose, onEdit }) => {
         <div className="p-8 pb-0">
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand to-[#1a8f9a] flex items-center justify-center text-white font-black text-xl shadow-lg shadow-brand/30">
-                {initials}
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand to-[#1a8f9a] flex items-center justify-center text-white font-black text-xl shadow-lg shadow-brand/30 overflow-hidden shrink-0">
+                {profileImage
+                  ? <img src={profileImage} alt={initials} className="w-full h-full object-cover" />
+                  : initials
+                }
               </div>
               <div>
                 <h2 className="text-2xl font-black text-gray-900 leading-tight">

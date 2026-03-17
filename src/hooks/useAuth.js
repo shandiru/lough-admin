@@ -52,6 +52,7 @@ export const useAuth = () => {
     isAuthenticated,
     role: user?.role,
     name: user?.name,
+    profileImage: user?.profileImage || null,
     handleLogout,
   };
 };
