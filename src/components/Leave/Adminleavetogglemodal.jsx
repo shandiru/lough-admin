@@ -22,11 +22,19 @@ const getDuration = (leave) => {
  *   approved → rejected  (reason required)
  *   rejected → approved  (reason required)
  */
+const getImageUrl = (src) => {
+  if (!src) return null;
+  if (src.startsWith('http')) return src;
+  return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`;
+};
+
 const AdminLeaveToggleModal = ({ leave, onClose, onReviewed }) => {
   const [adminNote, setAdminNote] = useState(leave.adminNote || '');
   const [loading,   setLoading]   = useState(false);
 
   const staff        = leave?.staffId?.userId;
+  const profileImage = getImageUrl(staff?.profileImage);
+  const initials     = `${staff?.firstName?.[0] ?? ''}${staff?.lastName?.[0] ?? ''}`.toUpperCase();
   const isApproved   = leave.status === 'approved';
   const targetStatus = isApproved ? 'rejected' : 'approved';
   const actionLabel  = isApproved ? 'Reject' : 'Approve';
@@ -86,8 +94,11 @@ const AdminLeaveToggleModal = ({ leave, onClose, onReviewed }) => {
         {/* Staff + leave info */}
         <div className="bg-[#F5EDE4] rounded-2xl p-4 mb-5 flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black text-sm shrink-0">
-              {staff?.firstName?.charAt(0)}
+            <div className="w-9 h-9 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black text-sm shrink-0 overflow-hidden">
+              {profileImage
+                ? <img src={profileImage} alt={initials} className="w-full h-full object-cover" />
+                : initials
+              }
             </div>
             <div>
               <p className="font-bold text-gray-800 text-sm">{staff?.firstName} {staff?.lastName}</p>

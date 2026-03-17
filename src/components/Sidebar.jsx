@@ -16,7 +16,7 @@ const getImageUrl = (src) => {
 };
 
 const Sidebar = () => {
-  const { name, role, handleLogout } = useAuth();
+  const { name, role, profileImage: reduxProfileImage, handleLogout } = useAuth();
   const dispatch = useDispatch();
   const location = useLocation();
 
@@ -45,7 +45,9 @@ const Sidebar = () => {
     );
   };
 
-  const profileImage = getImageUrl(profileData?.user?.profileImage);
+  // Use profileData from API if available, otherwise fall back to Redux (from login/refresh)
+  const rawProfileImage = profileData?.user?.profileImage || reduxProfileImage || null;
+  const profileImage = getImageUrl(rawProfileImage);
   const initials = name
     ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "?";
@@ -59,7 +61,7 @@ const Sidebar = () => {
       {profileImage ? (
         <img src={profileImage} alt="avatar" className="w-full h-full object-cover" />
       ) : (
-        <span>{initials?.[0]}</span>
+        <span>{initials}</span>
       )}
     </button>
   );

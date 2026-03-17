@@ -5,6 +5,12 @@ import toast from 'react-hot-toast';
 
 const toMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 
+const getImageUrl = (src) => {
+  if (!src) return null;
+  if (src.startsWith('http')) return src;
+  return `${import.meta.env.VITE_API_URL?.replace('/api', '')}${src}`;
+};
+
 const getDuration = (leave) => {
   if (leave.isHourly && leave.startTime && leave.endTime) {
     const mins = toMins(leave.endTime) - toMins(leave.startTime);
@@ -23,6 +29,8 @@ const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
 
   const staff    = leave?.staffId?.userId;
   const duration = getDuration(leave);
+  const profileImage = getImageUrl(staff?.profileImage);
+  const initials = `${staff?.firstName?.[0] ?? ''}${staff?.lastName?.[0] ?? ''}`.toUpperCase();
 
   const handleReview = async (status) => {
     setLoading(true);
@@ -52,8 +60,11 @@ const AdminLeaveReviewModal = ({ leave, onClose, onReviewed }) => {
         <div className="bg-[#F5EDE4] rounded-2xl p-4 mb-5 flex flex-col gap-3">
           {/* Staff avatar row */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black text-sm shrink-0">
-              {staff?.firstName?.charAt(0)}
+            <div className="w-10 h-10 rounded-full bg-[var(--color-brand)]/20 flex items-center justify-center text-[var(--color-brand)] font-black text-sm shrink-0 overflow-hidden">
+              {profileImage
+                ? <img src={profileImage} alt={initials} className="w-full h-full object-cover" />
+                : initials
+              }
             </div>
             <div>
               <p className="font-bold text-gray-800">{staff?.firstName} {staff?.lastName}</p>
