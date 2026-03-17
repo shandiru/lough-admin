@@ -73,17 +73,19 @@ function MonthCalendar({ selected, onSelect, disablePast=true }) {
 // ── Admin Direct Cancel Modal ─────────────────────────────────────────────────
 function AdminCancelModal({ booking, onClose, onDone }) {
   const [refund, setRefund] = useState('');
+  const [refundKey, setRefundKey] = useState('');
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const maxRefund = booking.paidAmount>0 ? (booking.paidAmount/100).toFixed(2) : '0.00';
   const hasStripe = !!booking.stripePaymentIntentId && booking.paidAmount>0;
+  const wantsRefund = hasStripe && parseFloat(refund) > 0;
 
   const submit = async () => {
     setLoading(true);
     try {
       const refundPence = refund ? Math.round(parseFloat(refund)*100) : 0;
-      await adminCancelBooking(booking._id, { refundAmount:refundPence, reason, internalNotes:note });
+      await adminCancelBooking(booking._id, { refundAmount:refundPence, reason, internalNotes:note, refundKey });
       toast.success('Booking cancelled'+(refundPence>0?` & £${(refundPence/100).toFixed(2)} refunded`:''));
       onDone();
     } catch(e) { toast.error(e.response?.data?.message||'Failed to cancel booking'); }
@@ -124,6 +126,19 @@ function AdminCancelModal({ booking, onClose, onDone }) {
             <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700 flex items-center gap-2">
               <AlertTriangle size={14}/>
               {booking.paidAmount>0 ? 'No Stripe payment ID — cannot issue automatic refund. Handle manually if needed.' : 'No payment collected — cancel only.'}
+            </div>
+          )}
+          {wantsRefund && (
+            <div>
+              <label className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1.5 block flex items-center gap-1">🔑 Admin Refund Key — Required to issue refund</label>
+              <input
+                type="password"
+                value={refundKey}
+                onChange={e=>setRefundKey(e.target.value)}
+                placeholder="Enter admin refund key..."
+                className={inputCls+' border-red-200 focus:border-red-400 focus:ring-red-100'}
+              />
+              <p className="text-xs text-red-400 mt-1">This key is required before Stripe will process the refund.</p>
             </div>
           )}
           <div>
