@@ -30,8 +30,8 @@ export const updateStatus = async (bookingId, status, balanceReceived) => {
   return res.data;
 };
 
-export const adminCancelBooking = async (bookingId, { refundAmount = 0, reason = '', internalNotes = '' }) => {
-  const res = await axiosInstance.post(`/bookings/${bookingId}/admin-cancel`, { refundAmount, reason, internalNotes });
+export const adminCancelBooking = async (bookingId, { refundAmount = 0, reason = '', internalNotes = '', refundKey = '' }) => {
+  const res = await axiosInstance.post(`/bookings/${bookingId}/admin-cancel`, { refundAmount, reason, internalNotes, refundKey });
   return res.data;
 };
 
