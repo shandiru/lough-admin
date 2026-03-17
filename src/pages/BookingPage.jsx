@@ -514,9 +514,7 @@ function BookingDrawer({ booking, onClose, onUpdated }) {
               <button onClick={()=>setRev(true)} className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap transition-all">Review</button>
             </div>
           )}
-          {booking.bookingSource==='external' && (
-            <div className="bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 flex items-center gap-2 text-xs font-bold text-purple-600"><Calendar size={13}/> External Booking (Google Calendar)</div>
-          )}
+        
           <div>
             <p className="text-xs font-bold text-[#C9AF94] uppercase tracking-widest mb-3">Appointment</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -609,7 +607,7 @@ function CalendarView({ staffList, onSelectBooking }) {
   const bookingsByDay = useMemo(()=>{
     const m={}; days.forEach(d=>{ m[isoDate(d)]=[]; });
     (data.bookings||[]).forEach(b=>{ const ds=isoDate(new Date(b.bookingDate)); if(m[ds]) m[ds].push({...b,_isInternal:true}); });
-    (data.googleBookings||[]).forEach(b=>{ const ds=isoDate(new Date(b.date)); if(m[ds]) m[ds].push({...b,_isGoogle:true}); });
+ 
     return m;
   },[data,days]);
 
@@ -696,7 +694,7 @@ function CalendarView({ staffList, onSelectBooking }) {
             <span className="text-[10px] text-gray-500">{s.userId?.firstName}</span>
           </div>
         ))}
-        <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-purple-400"/><span className="text-[10px] text-gray-500">External (Google)</span></div>
+       
       </div>
     </div>
   );
@@ -797,7 +795,7 @@ export default function AdminBookingPage() {
                             <td className="px-4 py-3">
                               <p className="font-mono text-xs font-bold text-[#22B8C8]">{b.bookingNumber}</p>
                               {hasCancelReq && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full mt-1"><RefreshCw size={9}/> Cancel req</span>}
-                              {b.bookingSource==='external' && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full mt-1">🔗 External</span>}
+                              
                             </td>
                             <td className="px-4 py-3"><p className="font-semibold text-gray-800">{b.customerName}</p><p className="text-xs text-gray-400">{b.customerEmail}</p></td>
                             <td className="px-4 py-3 text-gray-600">{b.service?.name||'—'}</td>
