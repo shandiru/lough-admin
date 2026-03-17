@@ -302,7 +302,7 @@ export default function AdminDashboard() {
               </div>
               <div className="px-5 pb-4">
                 <button
-                  onClick={() => navigate('/bookings')}
+                  onClick={() => navigate('/dashboard/admin/bookings')}
                   className="w-full text-xs font-bold text-[#22B8C8] py-2 rounded-xl hover:bg-[#22B8C8]/5 transition-all flex items-center justify-center gap-1"
                 >
                   View all bookings <ArrowRight size={12} />
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
               </div>
               <div className="px-5 pb-4">
                 <button
-                  onClick={() => navigate('/bookings')}
+                  onClick={() => navigate('/dashboard/admin/bookings')}
                   className="w-full text-xs font-bold text-[#22B8C8] py-2 rounded-xl hover:bg-[#22B8C8]/5 transition-all flex items-center justify-center gap-1"
                 >
                   View all bookings <ArrowRight size={12} />
@@ -373,7 +373,7 @@ export default function AdminDashboard() {
                   <p className="font-bold text-gray-700 text-sm">Staff</p>
                 </div>
                 <button
-                  onClick={() => navigate('/staff')}
+                  onClick={() => navigate('/dashboard/admin/staff')}
                   className="text-xs font-bold text-[#22B8C8] hover:underline flex items-center gap-1"
                 >
                   Manage <ArrowRight size={11} />
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
                           <p className="text-sm font-semibold text-gray-800 truncate">
                             {u ? `${u.firstName} ${u.lastName}` : 'Unknown'}
                           </p>
-                          <p className="text-xs text-gray-400">{s.services?.length || 0} service{s.services?.length !== 1 ? 's' : ''}</p>
+                         
                         </div>
                         <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${isActive ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                           {isActive ? <UserCheck size={10} /> : <UserX size={10} />}
