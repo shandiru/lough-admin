@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { X, XCircle, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
+import { X, XCircle, CheckCircle2, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { updateStatus } from '../../api/bookingService';
 import { INPUT_CLS, fromMins, toMins } from './constants';
 import ReviewCancelModal from './ReviewCancelModal';
 import AdminCancelModal from './AdminCancelModal';
 import CompleteBookingModal from './CompleteBookingModal';
+import RescheduleReviewModal from './RescheduleReviewModal';
 
-export default function BookingDrawer({ booking, onClose, onUpdated }) {
+export default function BookingDrawer({ booking, staffList = [], onClose, onUpdated }) {
   const [status, setStatus]         = useState(booking.status);
   const [saving, setSaving]         = useState(false);
   const [showReview, setRev]        = useState(false);
   const [showAdminCancel, setAdminCancel] = useState(false);
   const [showComplete, setShowComplete]  = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
 
   const svc     = booking.service;
   const staff   = booking.staffMember?.userId;
@@ -61,6 +63,31 @@ export default function BookingDrawer({ booking, onClose, onUpdated }) {
               <button
                 onClick={() => setRev(true)}
                 className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap transition-all"
+              >
+                Review
+              </button>
+            </div>
+          )}
+
+          {booking.rescheduleRequestStatus === 'pending' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="font-bold text-blue-700 text-sm flex items-center gap-1.5">
+                  <RefreshCw size={15} /> Reschedule Requested
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  {booking.rescheduleReason || 'No reason provided'}
+                </p>
+                {booking.rescheduleDate && (
+                  <p className="text-xs text-blue-500 mt-0.5">
+                    Wants: {new Date(booking.rescheduleDate).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}
+                    {booking.rescheduleTime ? ` at ${booking.rescheduleTime}` : ''}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setShowReschedule(true)}
+                className="bg-[#22B8C8] hover:bg-[#1a9aad] text-white text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap transition-all"
               >
                 Review
               </button>
@@ -194,6 +221,14 @@ export default function BookingDrawer({ booking, onClose, onUpdated }) {
           booking={booking}
           onClose={() => { setShowComplete(false); setStatus(booking.status); }}
           onDone={() => { setShowComplete(false); onClose(); onUpdated(); }}
+        />
+      )}
+      {showReschedule && (
+        <RescheduleReviewModal
+          booking={booking}
+          staffList={staffList}
+          onClose={() => setShowReschedule(false)}
+          onDone={() => { setShowReschedule(false); onClose(); onUpdated(); }}
         />
       )}
     </>

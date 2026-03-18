@@ -43,7 +43,10 @@ export default function AdminBookingPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const pendingCancelCount = bookings.filter(b => b.cancelRequestStatus === 'pending').length;
+  const pendingCancelCount     = bookings.filter(b => b.cancelRequestStatus     === 'pending').length;
+  const pendingRescheduleCount = bookings.filter(b => b.rescheduleRequestStatus === 'pending').length;
+
+  const [filterReschedule, setFReschedule] = useState(false);
 
   const filtered = bookings.filter(b => {
     if (search) {
@@ -56,6 +59,7 @@ export default function AdminBookingPage() {
     }
     if (filterStatus !== 'all' && b.status !== filterStatus) return false;
     if (filterCancel && b.cancelRequestStatus !== 'pending') return false;
+    if (filterReschedule && b.rescheduleRequestStatus !== 'pending') return false;
     return true;
   });
 
@@ -96,6 +100,19 @@ export default function AdminBookingPage() {
                 }`}
               >
                 <AlertTriangle size={13} /> {pendingCancelCount} Cancel Request{pendingCancelCount > 1 ? 's' : ''}
+              </button>
+            )}
+
+            {pendingRescheduleCount > 0 && (
+              <button
+                onClick={() => setFReschedule(r => !r)}
+                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all ${
+                  filterReschedule
+                    ? 'bg-[#22B8C8] text-white border-[#22B8C8]'
+                    : 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-400'
+                }`}
+              >
+                <RefreshCw size={13} /> {pendingRescheduleCount} Reschedule{pendingRescheduleCount > 1 ? 's' : ''}
               </button>
             )}
 
@@ -156,18 +173,24 @@ export default function AdminBookingPage() {
                         {filtered.length === 0 ? (
                           <tr><td colSpan={9} className="text-center py-16 text-gray-400 text-sm">No bookings found</td></tr>
                         ) : filtered.map(b => {
-                          const hasCancelReq = b.cancelRequestStatus === 'pending';
+                          const hasCancelReq     = b.cancelRequestStatus     === 'pending';
+                          const hasRescheduleReq = b.rescheduleRequestStatus === 'pending';
                           return (
                             <tr
                               key={b._id}
                               onClick={() => setSelected(b)}
-                              className={`hover:bg-gray-50 transition-colors cursor-pointer ${hasCancelReq ? 'bg-orange-50/50' : ''}`}
+                              className={`hover:bg-gray-50 transition-colors cursor-pointer ${hasCancelReq ? 'bg-orange-50/50' : hasRescheduleReq ? 'bg-blue-50/40' : ''}`}
                             >
                               <td className="px-4 py-3">
                                 <p className="font-mono text-xs font-bold text-[#22B8C8]">{b.bookingNumber}</p>
                                 {hasCancelReq && (
                                   <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full mt-1">
-                                    <RefreshCw size={9} /> Cancel req
+                                    <AlertTriangle size={9} /> Cancel req
+                                  </span>
+                                )}
+                                {hasRescheduleReq && (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full mt-1 ml-1">
+                                    <RefreshCw size={9} /> Reschedule
                                   </span>
                                 )}
                               </td>
@@ -227,6 +250,7 @@ export default function AdminBookingPage() {
       {selected && (
         <BookingDrawer
           booking={selected}
+          staffList={staffList}
           onClose={() => setSelected(null)}
           onUpdated={() => { setSelected(null); load(); }}
         />
