@@ -16,7 +16,6 @@ const StaffLeavePage = () => {
   const fetchLeaves = useCallback((isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
-
     leaveService.getMyLeaves()
       .then(res => setLeaves(res.data))
       .catch(() => toast.error('Failed to load leaves'))
@@ -24,21 +23,16 @@ const StaffLeavePage = () => {
   }, []);
 
   useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
-
   useEffect(() => {
-    const interval = setInterval(() => fetchLeaves(true), 30000);
-    return () => clearInterval(interval);
+    const t = setInterval(() => fetchLeaves(true), 30000);
+    return () => clearInterval(t);
   }, [fetchLeaves]);
 
   const handleRefresh = () => fetchLeaves(true);
-
-  const onNewLeave = (leave) => setLeaves(prev => [leave, ...prev]);
-  const onCancel = (id) =>
-    setLeaves(prev => prev.map(l => l._id === id ? { ...l, status: 'cancelled' } : l));
-  const onUpdated = (updated) =>
-    setLeaves(prev => prev.map(l => l._id === updated._id ? updated : l));
-  const onDeleted = (id) =>
-    setLeaves(prev => prev.filter(l => l._id !== id));
+  const onNewLeave    = (leave)   => setLeaves(prev => [leave, ...prev]);
+  const onCancel      = (id)      => setLeaves(prev => prev.map(l => l._id === id ? { ...l, status: 'cancelled' } : l));
+  const onUpdated     = (updated) => setLeaves(prev => prev.map(l => l._id === updated._id ? updated : l));
+  const onDeleted     = (id)      => setLeaves(prev => prev.filter(l => l._id !== id));
 
   const total    = leaves.length;
   const pending  = leaves.filter(l => l.status === 'pending').length;
@@ -50,7 +44,8 @@ const StaffLeavePage = () => {
       <Toaster position="top-right" reverseOrder={false} />
       <Sidebar />
 
-      <main className="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto min-w-0">
+      {/* main: on mobile add top padding for hamburger button */}
+      <main className="flex-1 p-4 pt-16 lg:pt-6 sm:p-6 lg:p-10 overflow-y-auto min-w-0">
 
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -58,20 +53,20 @@ const StaffLeavePage = () => {
             <CalendarDays size={16} className="text-[var(--color-brand)] shrink-0" />
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[3px]">My Leaves</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900">Leave Requests</h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="flex items-center gap-2 bg-white text-gray-600 text-xs font-bold px-3 sm:px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition disabled:opacity-60">
-                <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-                <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                className="flex items-center gap-1.5 bg-white text-gray-600 text-xs font-bold px-3 py-2.5 rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition disabled:opacity-60">
+                <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+                <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
               <button
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 bg-[var(--color-brand)] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2.5 rounded-2xl hover:opacity-90 transition shadow-md whitespace-nowrap">
-                <PlusCircle size={16} />
+                className="flex items-center gap-1.5 bg-[var(--color-brand)] text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-2.5 rounded-2xl hover:opacity-90 transition shadow-md whitespace-nowrap">
+                <PlusCircle size={15} />
                 <span>Apply for Leave</span>
               </button>
             </div>
