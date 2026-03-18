@@ -16,12 +16,30 @@ const RegisterPage = () => {
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
   const [countdown, setCountdown] = useState(null);
-  
 
   const timerRef = useRef(null);
 
+
+  const validateUKPhone = (phone) => {
+    const ukRegex = /^(?:\+44|0)7\d{9}$/;
+    return ukRegex.test(phone.replace(/\s+/g, ""));
+  };
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    
+    if (name === "phone") {
+      if (value === "" || validateUKPhone(value)) {
+        setMessage("");
+        setStatus("idle");
+      } else {
+        setMessage("Enter a valid UK phone number (e.g. +44 7123456789)");
+        setStatus("error");
+      }
+    }
+
+    setForm({ ...form, [name]: value });
   };
 
   const startCountdown = () => {
@@ -41,7 +59,6 @@ const RegisterPage = () => {
     }, 1000);
   };
 
-  
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -49,14 +66,21 @@ const RegisterPage = () => {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
+
+    
+    if (!validateUKPhone(form.phone)) {
+      setStatus("error");
+      setMessage("Please enter a valid UK phone number");
+      return;
+    }
+
     setStatus("loading");
     setMessage("");
 
     try {
-      
       const data = await sendInvite(form);
-      
+
       setStatus("success");
       setMessage(data.message);
       startCountdown();
@@ -116,7 +140,14 @@ const RegisterPage = () => {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Phone</label>
-              <input type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+94 712345678" className="w-full rounded-lg px-4 py-2 bg-brand-light/30 focus:bg-white focus:ring-2 focus:ring-brand outline-none transition" />
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="+44 7123456789"
+                className="w-full rounded-lg px-4 py-2 bg-brand-light/30 focus:bg-white focus:ring-2 focus:ring-brand outline-none transition"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Gender</label>
@@ -145,7 +176,13 @@ const RegisterPage = () => {
             disabled={status === "loading" || (countdown !== null && countdown > 0)}
             className="w-full bg-brand text-white py-2.5 rounded-lg font-medium shadow-md hover:opacity-90 transition disabled:opacity-50"
           >
-            {status === "loading" ? "Sending..." : countdown > 0 ? `Wait ${formatTime(countdown)}` : canResend ? "Resend Invite" : "Send Invite Link"}
+            {status === "loading"
+              ? "Sending..."
+              : countdown > 0
+              ? `Wait ${formatTime(countdown)}`
+              : canResend
+              ? "Resend Invite"
+              : "Send Invite Link"}
           </button>
         </form>
 
