@@ -4,10 +4,9 @@ import { useAuth } from "../hooks/useAuth";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../store/slices/authSlice";
 import { adminLinks, staffLinks } from "../config/roleLinks";
-import { FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiLogOut, FiChevronLeft, FiChevronRight, FiMenu, FiX } from "react-icons/fi";
 import { profileService } from "../api/profileService";
 import ProfileUpdateModal from "./Profile/ProfileUpdateModal";
-
 
 const getImageUrl = (src) => {
   if (!src) return null;
@@ -20,35 +19,39 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [profileData, setProfileData] = useState(null);
+  const [collapsed,         setCollapsed]         = useState(false);
+  const [mobileOpen,        setMobileOpen]        = useState(false);
+  const [showProfileModal,  setShowProfileModal]  = useState(false);
+  const [profileData,       setProfileData]       = useState(null);
 
   const links = role === "admin" ? adminLinks : staffLinks;
 
-  // Fetch profile on mount
+  // Close mobile sidebar on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+  // Prevent body scroll when mobile sidebar open
   useEffect(() => {
-    profileService
-      .getMyProfile()
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    profileService.getMyProfile()
       .then(({ data }) => setProfileData(data))
       .catch(() => {});
   }, []);
 
-  // After update: refresh local state + Redux
   const handleProfileUpdated = (updated) => {
     setProfileData({ user: updated.user, staff: updated.staff });
-    dispatch(
-      updateUserProfile({
-        name: `${updated.user.firstName} ${updated.user.lastName}`,
-        profileImage: updated.user.profileImage,
-      })
-    );
+    dispatch(updateUserProfile({
+      name: `${updated.user.firstName} ${updated.user.lastName}`,
+      profileImage: updated.user.profileImage,
+    }));
   };
 
-  // Use profileData from API if available, otherwise fall back to Redux (from login/refresh)
   const rawProfileImage = profileData?.user?.profileImage || reduxProfileImage || null;
-  const profileImage = getImageUrl(rawProfileImage);
-  const initials = name
+  const profileImage    = getImageUrl(rawProfileImage);
+  const initials        = name
     ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "?";
 
@@ -58,88 +61,120 @@ const Sidebar = () => {
       title="Edit profile"
       className={`${size} rounded-full overflow-hidden bg-[#22b8c7] flex items-center justify-center text-white font-bold ${textSize} shrink-0 hover:scale-110 transition-transform border-2 border-white shadow`}
     >
-      {profileImage ? (
-        <img src={profileImage} alt="avatar" className="w-full h-full object-cover" />
-      ) : (
-        <span>{initials}</span>
-      )}
+      {profileImage
+        ? <img src={profileImage} alt="avatar" className="w-full h-full object-cover" />
+        : <span>{initials}</span>
+      }
     </button>
+  );
+
+  const SidebarContent = ({ isMobile = false }) => (
+    <aside className={`
+      h-full bg-[#cbb49c] text-[#3b1f0e] flex flex-col transition-all duration-300
+      ${isMobile ? "w-64" : (collapsed ? "w-16" : "w-60")}
+    `}>
+      {/* Brand */}
+      <div className="flex items-center justify-between p-4 border-b border-[#a08060]/40">
+        {(isMobile || !collapsed) && (
+          <img src="/logo.webp" alt="Lough Skin" className="h-12 w-auto" />
+        )}
+        {isMobile ? (
+          <button onClick={() => setMobileOpen(false)} className="text-[#3b1f0e] hover:text-[#22b8c7] transition-colors ml-auto">
+            <FiX size={22} />
+          </button>
+        ) : (
+          <button onClick={() => setCollapsed(!collapsed)} className="text-[#3b1f0e] hover:text-[#22b8c7] transition-colors">
+            {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
+          </button>
+        )}
+      </div>
+
+      {/* User Info */}
+      {(isMobile || !collapsed) && (
+        <div className="mx-3 my-4 p-3 bg-white/40 rounded-xl">
+          <div className="flex items-center gap-3">
+            <AvatarCircle />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#3b1f0e] truncate">{name}</p>
+              <p className="text-xs text-[#3b1f0e]/60">{role?.toUpperCase()}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Avatar only (collapsed desktop) */}
+      {!isMobile && collapsed && (
+        <div className="flex justify-center py-4">
+          <AvatarCircle size="w-9 h-9" />
+        </div>
+      )}
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+        {links.map((link) => {
+          const Icon     = link.icon;
+          const isActive = location.pathname === link.path;
+          return (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${
+                isActive
+                  ? "bg-[#22b8c7] text-white shadow-md"
+                  : "text-[#3b1f0e] hover:bg-white/50 hover:text-[#22b8c7]"
+              }`}
+            >
+              <Icon size={18} className="shrink-0" />
+              {(isMobile || !collapsed) && <span className="font-medium">{link.label}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Logout */}
+      <div className="p-3">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-[#3b1f0e] hover:bg-white/50 hover:text-[#22b8c7] transition-colors"
+        >
+          <FiLogOut size={18} className="shrink-0" />
+          {(isMobile || !collapsed) && <span className="font-medium">Logout</span>}
+        </button>
+      </div>
+    </aside>
   );
 
   return (
     <>
+      {/* ── Desktop Sidebar (sticky, always visible) ── */}
+      <div className="hidden lg:flex h-screen sticky top-0 shrink-0">
+        <SidebarContent isMobile={false} />
+      </div>
 
-      <aside
-        className={`h-screen bg-[#cbb49c] text-[#3b1f0e] flex flex-col transition-all duration-300 ${
-          collapsed ? "w-16" : "w-60"
-        }`}
+      {/* ── Mobile: Hamburger Button (top-left, fixed) ── */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-[#cbb49c] rounded-xl shadow-lg flex items-center justify-center text-[#3b1f0e] hover:bg-[#b8a088] transition-colors"
+        aria-label="Open menu"
       >
-        {/* Brand */}
-        <div className="flex items-center justify-between p-4 border-b border-[#a08060]/40">
-          {!collapsed && (
-            <img src="/logo.webp" alt="Lough Skin" className="h-12 w-auto" />
-          )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="text-[#3b1f0e] hover:text-[#22b8c7] transition-colors"
-          >
-            {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
-          </button>
-        </div>
+        <FiMenu size={20} />
+      </button>
 
-        {/* ── User Info (expanded) ── */}
-        {!collapsed && (
-          <div className="mx-3 my-6 p-3 bg-white/40 rounded-xl">
-            <div className="flex items-center gap-3">
-              <AvatarCircle />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#3b1f0e] truncate">{name}</p>
-                <p className="text-xs text-[#3b1f0e]/60">{role?.toUpperCase()}</p>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* ── Mobile: Backdrop ── */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-        {/* ── Avatar only (collapsed) ── */}
-        {collapsed && (
-          <div className="flex justify-center py-4">
-            <AvatarCircle size="w-9 h-9" />
-          </div>
-        )}
-
-        {/* Navigation */}
-        <nav className="flex-1 px-3 space-y-2">
-          {links.map((link) => {
-            const Icon = link.icon;
-            const isActive = location.pathname === link.path;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all ${
-                  isActive
-                    ? "bg-[#22b8c7] text-white shadow-md"
-                    : "text-[#3b1f0e] hover:bg-white/50 hover:text-[#22b8c7]"
-                }`}
-              >
-                <Icon size={18} />
-                {!collapsed && <span className="font-medium">{link.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Logout */}
-        <div className="p-3">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-2 rounded-xl text-[#3b1f0e] hover:bg-white/50 hover:text-[#22b8c7] transition-colors"
-          >
-            <FiLogOut size={18} />
-            {!collapsed && <span className="font-medium">Logout</span>}
-          </button>
-        </div>
-      </aside>
+      {/* ── Mobile: Slide-in Drawer ── */}
+      <div className={`
+        lg:hidden fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
+        <SidebarContent isMobile={true} />
+      </div>
 
       {/* Profile Modal */}
       {showProfileModal && (
