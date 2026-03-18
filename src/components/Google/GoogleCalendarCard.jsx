@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Trash2 } from 'lucide-react';
 
-const GoogleLogo = ({ size = 20 }) => (
+const GoogleLogo = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -13,61 +13,62 @@ const GoogleLogo = ({ size = 20 }) => (
 const GoogleCalendarCard = ({ isConnected, onConnect, onDisconnect, processing }) => {
   if (isConnected) {
     return (
-      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/60 p-7 shadow-xl">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center">
-              <GoogleLogo size={22} />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/60 p-4 shadow-md">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center">
+              <GoogleLogo size={16} />
             </div>
             <div>
-              <p className="font-black text-gray-800 text-sm">Google Calendar</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[2px]">Active</span>
+              <p className="font-bold text-gray-800 text-xs">Google Calendar</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Active</span>
               </div>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={onDisconnect}
             disabled={processing}
-            className="p-2.5 rounded-xl bg-white border border-red-100 text-red-500 hover:bg-red-50 transition-all disabled:opacity-50"
-            title="Disconnect Calendar"
+            className="p-1.5 rounded-lg bg-white border border-red-100 text-red-400 hover:bg-red-50 transition-all disabled:opacity-50"
+            title="Disconnect"
           >
-            <Trash2 size={18} />
+            <Trash2 size={13} />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 bg-white/70 rounded-xl px-4 py-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-          <span className="text-xs text-gray-600 font-medium">Synced and ready.</span>
+        <div className="flex items-center gap-1.5 bg-white/70 rounded-lg px-3 py-2 mt-3">
+          <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+          <span className="text-[11px] text-gray-600 font-medium">Synced and ready.</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] bg-white/70 backdrop-blur-md border border-white p-7 shadow-xl">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center">
-          <GoogleLogo size={22} />
+    <div className="relative overflow-hidden rounded-2xl bg-white/70 backdrop-blur-md border border-white p-4 shadow-md">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center">
+          <GoogleLogo size={16} />
         </div>
         <div>
-          <p className="font-black text-gray-800 text-sm">Google Calendar</p>
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Not Linked</span>
+          <p className="font-bold text-gray-800 text-xs">Google Calendar</p>
+          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Not Linked</span>
         </div>
       </div>
+
       <button
         onClick={onConnect}
         disabled={processing}
-        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 py-4 rounded-2xl font-black text-sm transition-all disabled:opacity-60 group"
+        className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 py-2.5 rounded-xl font-bold text-xs transition-all disabled:opacity-60"
       >
         {processing ? (
-          <span className="w-5 h-5 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+          <span className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
         ) : (
           <>
-            <GoogleLogo size={20} />
-            <span className="uppercase tracking-widest text-xs">Sign in with Google</span>
+            <GoogleLogo size={15} />
+            <span className="uppercase tracking-widest text-[10px]">Sign in with Google</span>
           </>
         )}
       </button>
