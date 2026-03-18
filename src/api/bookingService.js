@@ -5,10 +5,11 @@ export const getAllBookings = async () => {
   return res.data;
 };
 
-export const getAvailableSlotsAdmin = async (serviceId, date, customerGender, staffGenderPreference) => {
+export const getAvailableSlotsAdmin = async (serviceId, date, customerGender, staffGenderPreference, excludeBookingId) => {
   const params = new URLSearchParams({ serviceId, date });
   if (customerGender) params.append('customerGender', customerGender);
   if (staffGenderPreference && staffGenderPreference !== 'any') params.append('staffGenderPreference', staffGenderPreference);
+  if (excludeBookingId) params.append('excludeBookingId', excludeBookingId);
   const res = await axiosInstance.get(`/bookings/available-slots?${params}`);
   return res.data;
 };
@@ -39,5 +40,10 @@ export const getCalendarBookings = async (startDate, endDate, staffId = '') => {
   const params = new URLSearchParams({ startDate, endDate });
   if (staffId) params.append('staffId', staffId);
   const res = await axiosInstance.get(`/bookings/calendar?${params}`);
+  return res.data;
+};
+
+export const reviewRescheduleRequest = async (bookingId, payload) => {
+  const res = await axiosInstance.post(`/bookings/${bookingId}/reschedule-review`, payload);
   return res.data;
 };
