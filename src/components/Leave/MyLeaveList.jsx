@@ -12,7 +12,7 @@ const STATUS = {
   cancelled: { cls: 'bg-gray-100 text-gray-400',      icon: <Ban size={11} /> },
 };
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 3;
 
 const getDuration = (leave) => {
   if (leave.isHourly && leave.startTime && leave.endTime) {
