@@ -188,7 +188,7 @@ export default function AdminDashboard() {
           {/* Alert: pending cancel requests */}
           {pendingCancelCount > 0 && (
             <div
-              onClick={() => navigate('/bookings')}
+              onClick={() => navigate('/dashboard/admin/bookings')}
               className="bg-orange-50 border-2 border-orange-200 rounded-2xl px-5 py-4 flex items-center justify-between cursor-pointer hover:border-orange-400 transition-all"
             >
               <div className="flex items-center gap-3">
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
               <StatCard
                 icon={CalendarCheck} label="Today's Bookings"
                 value={todayBookings.length} sub={`${upcomingToday.length} upcoming`}
-                color={BRAND} onClick={() => navigate('/bookings')}
+                color={BRAND} onClick={() => navigate('/dashboard/admin/bookings')}
               />
               <StatCard
                 icon={TrendingUp} label="This Month Revenue"
@@ -221,12 +221,12 @@ export default function AdminDashboard() {
               <StatCard
                 icon={Users} label="Staff"
                 value={staffList.length} sub={`${activeStaff} active · ${pendingStaff} pending`}
-                color={GOLD} onClick={() => navigate('/staff')}
+                color={GOLD} onClick={() => navigate('/dashboard/admin/staff')}
               />
               <StatCard
                 icon={Briefcase} label="Active Services"
                 value={activeServices} sub={`${services.length} total`}
-                color="#a78bfa" onClick={() => navigate('/services')}
+                color="#a78bfa" onClick={() => navigate('/dashboard/admin/service')}
               />
             </div>
           </div>
