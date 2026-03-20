@@ -20,6 +20,7 @@ import ServicePage     from './pages/Servicepage';
 import StaffPage       from './pages/Staffpage';
 import AdminLeavePage  from './pages/AdminLeavePage'; 
 import AdminBookingPage from './pages/BookingPage';
+import AuditLogPage    from './pages/AuditLogPage';
 
 
 import StaffDashboard  from './pages/dashboard/StaffDashboard';
@@ -58,6 +59,9 @@ const App = () => {
           } />
           <Route path="/dashboard/admin/bookings" element={
             <ProtectedRoute allowedRoles={['admin']}><AdminBookingPage /></ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin/audit-logs" element={
+            <ProtectedRoute allowedRoles={['admin']}><AuditLogPage /></ProtectedRoute>
           } />
 
          
