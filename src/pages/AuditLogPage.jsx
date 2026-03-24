@@ -32,13 +32,91 @@ const actionColor = (action = '') => {
 const ENTITIES = ['booking', 'staff', 'leave', 'service', 'category', 'auth', 'profile', 'payment'];
 const LIMITS   = [25, 50, 100];
 
-// ── Small JSON preview ────────────────────────────────────────────────────────
-function JsonPreview({ data }) {
+// ── Format a single value for display ────────────────────────────────────────
+function formatValue(val) {
+  if (val === null || val === undefined) return <span className="text-gray-300 italic">—</span>;
+  if (typeof val === 'boolean')
+    return val
+      ? <span className="text-green-600 font-semibold">Yes</span>
+      : <span className="text-red-500 font-semibold">No</span>;
+  if (typeof val === 'number') return <span className="text-blue-600 font-semibold">{val}</span>;
+  if (typeof val === 'string') {
+    // Date-like
+    if (/^\d{4}-\d{2}-\d{2}T/.test(val)) {
+      const d = new Date(val);
+      return (
+        <span className="text-gray-700">
+          {d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+          {' '}
+          <span className="text-gray-400 text-[11px]">
+            {d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </span>
+      );
+    }
+    return <span className="text-gray-700">{val}</span>;
+  }
+  if (Array.isArray(val)) {
+    if (val.length === 0) return <span className="text-gray-300 italic">Empty list</span>;
+    return (
+      <div className="flex flex-wrap gap-1 mt-0.5">
+        {val.map((item, i) => (
+          <span key={i} className="bg-gray-100 text-gray-600 text-[11px] px-2 py-0.5 rounded-full">
+            {typeof item === 'object' ? JSON.stringify(item) : String(item)}
+          </span>
+        ))}
+      </div>
+    );
+  }
+  if (typeof val === 'object') {
+    return (
+      <div className="mt-1 pl-2 border-l-2 border-gray-200 space-y-1">
+        {Object.entries(val).map(([k, v]) => (
+          <div key={k} className="flex gap-2 items-start text-[11px]">
+            <span className="text-gray-400 shrink-0 capitalize">{k.replace(/_/g, ' ')}:</span>
+            <span>{formatValue(v)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return <span className="text-gray-700">{String(val)}</span>;
+}
+
+// ── Human-readable data card ──────────────────────────────────────────────────
+function DataCard({ data, colorClass = 'border-gray-100 bg-gray-50' }) {
   if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) return null;
+
+  const parsed = typeof data === 'string' ? (() => { try { return JSON.parse(data); } catch { return data; } })() : data;
+
+  if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return <p className="text-sm text-gray-700 mt-1">{String(parsed)}</p>;
+  }
+
+  // Skip internal mongo/system keys
+  const SKIP = ['__v', 'updatedAt'];
+  const entries = Object.entries(parsed).filter(([k]) => !SKIP.includes(k));
+
+  const LABEL = {
+    _id: 'ID', createdAt: 'Created', firstName: 'First Name', lastName: 'Last Name',
+    isActive: 'Active', isAvailable: 'Available', profileImage: 'Profile Image',
+    phoneNumber: 'Phone', startTime: 'Start Time', endTime: 'End Time',
+    staffId: 'Staff ID', customerId: 'Customer ID', serviceId: 'Service ID',
+    bookingDate: 'Date', totalPrice: 'Total Price', paymentStatus: 'Payment',
+    leaveType: 'Leave Type', startDate: 'Start Date', endDate: 'End Date',
+  };
+
   return (
-    <pre className="bg-gray-50 border border-gray-200 rounded-lg text-xs p-3 overflow-x-auto max-h-40 text-gray-700 mt-2">
-      {JSON.stringify(data, null, 2)}
-    </pre>
+    <div className={`rounded-xl border p-3 space-y-2 ${colorClass}`}>
+      {entries.map(([key, val]) => (
+        <div key={key} className="flex gap-2 items-start">
+          <span className="text-[11px] font-semibold text-gray-400 shrink-0 min-w-[90px] capitalize pt-0.5">
+            {LABEL[key] || key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}
+          </span>
+          <span className="text-xs flex-1 min-w-0">{formatValue(val)}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -113,22 +191,35 @@ function LogDetailDrawer({ log, onClose }) {
           )}
 
           {/* Before / After */}
-          {log.before && (
-            <div>
-              <p className="text-xs text-gray-400 font-semibold mb-1 flex items-center gap-1"><FileText size={11} /> Before</p>
-              <JsonPreview data={log.before} />
-            </div>
-          )}
-          {log.after && (
-            <div>
-              <p className="text-xs text-gray-400 font-semibold mb-1 flex items-center gap-1"><FileText size={11} /> After</p>
-              <JsonPreview data={log.after} />
+          {(log.before || log.after) && (
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                <FileText size={11} /> What Changed
+              </p>
+              <div className="grid grid-cols-1 gap-3">
+                {log.before && (
+                  <div>
+                    <p className="text-[11px] font-bold text-orange-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> Before
+                    </p>
+                    <DataCard data={log.before} colorClass="border-orange-100 bg-orange-50/50" />
+                  </div>
+                )}
+                {log.after && (
+                  <div>
+                    <p className="text-[11px] font-bold text-green-600 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> After
+                    </p>
+                    <DataCard data={log.after} colorClass="border-green-100 bg-green-50/50" />
+                  </div>
+                )}
+              </div>
             </div>
           )}
           {log.meta && (
             <div>
-              <p className="text-xs text-gray-400 font-semibold mb-1">Meta</p>
-              <JsonPreview data={log.meta} />
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Additional Info</p>
+              <DataCard data={log.meta} colorClass="border-gray-100 bg-gray-50" />
             </div>
           )}
         </div>
