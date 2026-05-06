@@ -10,7 +10,13 @@ import axiosInstance from '../api/axiosInstance';
 
 const TEAL = '#22B8C8';
 
-function isoDate(d) { return d instanceof Date ? d.toISOString().split('T')[0] : new Date(d).toISOString().split('T')[0]; }
+function isoDate(d) {
+  const date = d instanceof Date ? d : new Date(d);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
 function fromMins(m) { return `${Math.floor(m / 60).toString().padStart(2, '0')}:${(m % 60).toString().padStart(2, '0')}`; }
 function toMins(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
@@ -112,7 +118,7 @@ function BookingDrawer({ booking, onClose }) {
 }
 
 // ── Calendar View ─────────────────────────────────────────────────────────────
-function StaffCalendarView({ bookings, onSelectBooking }) {
+function StaffCalendarView({ bookings, googleBookings, onSelectBooking }) {
   const [viewMode, setViewMode] = useState('week');
   const [currentDate, setCurrentDate] = useState(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; });
 
@@ -124,7 +130,6 @@ function StaffCalendarView({ bookings, onSelectBooking }) {
   }, [currentDate, viewMode]);
 
   const navigate = (dir) => { const step = viewMode === 'day' ? 1 : 7; setCurrentDate(d => addDays(d, dir * step)); };
-  const HOURS = Array.from({ length: 13 }, (_, i) => i + 8);
   const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const todayStr = isoDate(new Date());
 
@@ -135,13 +140,61 @@ function StaffCalendarView({ bookings, onSelectBooking }) {
     const m = {}; days.forEach(d => { m[isoDate(d)] = []; });
     bookings.filter(b => b.status !== 'cancelled').forEach(b => {
       const ds = isoDate(new Date(b.bookingDate));
-      if (m[ds]) m[ds].push(b);
+      if (m[ds]) m[ds].push({ ...b, _isInternal: true });
+    });
+    (googleBookings || []).forEach(b => {
+      const ds = isoDate(new Date(b.date));
+      if (m[ds]) m[ds].push({ ...b, _isGoogle: true });
+    });
+    Object.values(m).forEach(items => {
+      items.sort((a, b) => {
+        const aTime = a._isGoogle ? a.startTime : a.bookingTime;
+        const bTime = b._isGoogle ? b.startTime : b.bookingTime;
+        return toMins(aTime) - toMins(bTime);
+      });
     });
     return m;
-  }, [bookings, days]);
+  }, [bookings, googleBookings, days]);
 
-  const getTop = (time) => { const [h, min] = time.split(':').map(Number); return ((h - 8) * 60 + min) / (12 * 60) * 100; };
-  const getHeight = (dur) => Math.max((dur / (12 * 60)) * 100, 2.5);
+  const { startHour, endHour, hours } = useMemo(() => {
+    const times = [];
+
+    Object.values(bookingsByDay).flat().forEach((booking) => {
+      const startTime = booking._isGoogle ? booking.startTime : booking.bookingTime;
+      const endTime = booking._isGoogle
+        ? booking.endTime
+        : (() => {
+            const mins = toMins(booking.bookingTime) + (booking.service?.duration || booking.duration || 60);
+            const hour = Math.floor(mins / 60).toString().padStart(2, '0');
+            const minute = String(mins % 60).padStart(2, '0');
+            return `${hour}:${minute}`;
+          })();
+
+      if (startTime) times.push(toMins(startTime));
+      if (endTime) times.push(toMins(endTime));
+    });
+
+    if (times.length === 0) {
+      const baseHours = Array.from({ length: 13 }, (_, i) => i + 8);
+      return { startHour: 8, endHour: 20, hours: baseHours };
+    }
+
+    const minMins = Math.min(...times);
+    const maxMins = Math.max(...times);
+    const start = Math.max(0, Math.min(8, Math.floor(minMins / 60) - 1));
+    const end = Math.min(24, Math.max(20, Math.ceil(maxMins / 60) + 1));
+    return {
+      startHour: start,
+      endHour: end,
+      hours: Array.from({ length: Math.max(end - start + 1, 1) }, (_, i) => start + i),
+    };
+  }, [bookingsByDay]);
+
+  const getTop = (time) => {
+    const [h, min] = time.split(':').map(Number);
+    return ((((h - startHour) * 60) + min) / ((endHour - startHour) * 60)) * 100;
+  };
+  const getHeight = (dur) => Math.max((dur / ((endHour - startHour) * 60)) * 100, 2.5);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -171,7 +224,7 @@ function StaffCalendarView({ bookings, onSelectBooking }) {
         <div className="flex min-w-[500px]">
           {/* Time col */}
           <div className="w-14 shrink-0 border-r border-gray-100 pt-10">
-            {HOURS.map(h => (
+            {hours.map(h => (
               <div key={h} className="h-16 border-t border-gray-50 flex items-start px-2 pt-1">
                 <span className="text-[10px] text-gray-400 font-medium">{String(h).padStart(2, '0')}:00</span>
               </div>
@@ -189,19 +242,27 @@ function StaffCalendarView({ bookings, onSelectBooking }) {
                   <span className="text-[10px] font-bold text-gray-400 uppercase">{DAY_LABELS[day.getDay() === 0 ? 6 : day.getDay() - 1]}</span>
                   <span className={`text-sm font-black ${isToday ? 'text-[#22B8C8]' : 'text-gray-700'}`}>{day.getDate()}</span>
                 </div>
-                <div className="relative" style={{ height: `${13 * 4}rem` }}>
-                  {HOURS.map(h => <div key={h} className="absolute w-full border-t border-gray-50" style={{ top: `${((h - 8) / 12) * 100}%` }} />)}
+                <div className="relative" style={{ height: `${Math.max(endHour - startHour, 1) * 4}rem` }}>
+                  {hours.map(h => <div key={h} className="absolute w-full border-t border-gray-50" style={{ top: `${((h - startHour) / Math.max(endHour - startHour, 1)) * 100}%` }} />)}
                   {dayBookings.map((b, idx) => {
-                    const dur = b.service?.duration || b.duration || 60;
-                    const top = getTop(b.bookingTime);
+                    const startTime = b._isGoogle ? b.startTime : b.bookingTime;
+                    const dur = b._isGoogle
+                      ? Math.max(toMins(b.endTime) - toMins(b.startTime), 15)
+                      : (b.service?.duration || b.duration || 60);
+                    const top = getTop(startTime);
                     const height = getHeight(dur);
                     return (
                       <div key={b._id || idx}
-                        onClick={() => onSelectBooking(b)}
-                        className="absolute left-0.5 right-0.5 rounded-lg px-1.5 py-1 text-white overflow-hidden cursor-pointer hover:brightness-110 hover:shadow-md transition-all"
-                        style={{ top: `${top}%`, height: `${height}%`, minHeight: 20, backgroundColor: TEAL }}>
-                        <p className="text-[9px] font-black truncate leading-tight">{b.service?.name || 'Booking'}</p>
-                        <p className="text-[8px] truncate opacity-80">{b.customerName}</p>
+                        onClick={() => !b._isGoogle && onSelectBooking(b)}
+                        className={`absolute left-0.5 right-0.5 rounded-lg px-1.5 py-1 text-white overflow-hidden transition-all ${
+                          b._isGoogle
+                            ? 'opacity-80 cursor-default border border-purple-300'
+                            : 'cursor-pointer hover:brightness-110 hover:shadow-md'
+                        }`}
+                        style={{ top: `${top}%`, height: `${height}%`, minHeight: 20, backgroundColor: b._isGoogle ? '#a78bfa' : TEAL }}>
+                        <p className="text-[9px] font-black truncate leading-tight">{b._isGoogle ? (b.summary || 'External Booking') : (b.service?.name || 'Booking')}</p>
+                        {!b._isGoogle && <p className="text-[8px] truncate opacity-80">{b.customerName}</p>}
+                        {b._isGoogle && <p className="text-[8px] truncate opacity-80">{b.startTime}-{b.endTime}</p>}
                       </div>
                     );
                   })}
@@ -215,6 +276,8 @@ function StaffCalendarView({ bookings, onSelectBooking }) {
       <div className="p-3 border-t border-gray-100 flex items-center gap-2">
         <div className="w-3 h-3 rounded-full bg-[#22B8C8]" />
         <span className="text-[10px] text-gray-500">My Bookings</span>
+        <div className="w-3 h-3 rounded-full bg-[#a78bfa] ml-3" />
+        <span className="text-[10px] text-gray-500">Google Calendar</span>
       </div>
     </div>
   );
@@ -223,6 +286,7 @@ function StaffCalendarView({ bookings, onSelectBooking }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function StaffBookingPage() {
   const [bookings, setBookings] = useState([]);
+  const [googleBookings, setGoogleBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -233,7 +297,8 @@ export default function StaffBookingPage() {
     try {
       setLoading(true);
       const r = await axiosInstance.get('/bookings/staff/my');
-      setBookings(Array.isArray(r.data) ? r.data : []);
+      setBookings(Array.isArray(r.data) ? r.data : (r.data?.bookings || []));
+      setGoogleBookings(Array.isArray(r.data?.googleBookings) ? r.data.googleBookings : []);
     } catch {
       toast.error('Failed to load bookings');
     } finally {
@@ -280,7 +345,7 @@ export default function StaffBookingPage() {
 
         <div className="p-6 space-y-4">
           {viewMode === 'calendar' ? (
-            <StaffCalendarView bookings={bookings} onSelectBooking={b => setSelected(b)} />
+            <StaffCalendarView bookings={bookings} googleBookings={googleBookings} onSelectBooking={b => setSelected(b)} />
           ) : (
             <>
               {/* Filters */}

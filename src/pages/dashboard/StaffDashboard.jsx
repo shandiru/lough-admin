@@ -9,7 +9,13 @@ import { googleCalendarApi } from '../../api/googleCalendar';
 import GoogleCalendarCard from '../../components/Google/GoogleCalendarCard';
 import axiosInstance from '../../api/axiosInstance';
 
-function isoDate(d) { return d instanceof Date ? d.toISOString().split('T')[0] : new Date(d).toISOString().split('T')[0]; }
+function isoDate(d) {
+  const date = d instanceof Date ? d : new Date(d);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 function StatCard({ icon: Icon, label, value, color = '#22B8C8' }) {
   return (
@@ -33,7 +39,7 @@ function TodayAppointments() {
   useEffect(() => {
     axiosInstance.get('/bookings/staff/my')
       .then(r => {
-        const all = Array.isArray(r.data) ? r.data : [];
+        const all = Array.isArray(r.data) ? r.data : (r.data?.bookings || []);
         const today = all
           .filter(b => isoDate(new Date(b.bookingDate)) === todayStr && b.status !== 'cancelled')
           .sort((a, b) => a.bookingTime.localeCompare(b.bookingTime));
@@ -138,7 +144,7 @@ const StaffDashboard = () => {
 
     axiosInstance.get('/bookings/staff/my')
       .then(r => {
-        const all = Array.isArray(r.data) ? r.data : [];
+        const all = Array.isArray(r.data) ? r.data : (r.data?.bookings || []);
         const todayStr = isoDate(new Date());
         const todayCount = all.filter(b => isoDate(new Date(b.bookingDate)) === todayStr && b.status !== 'cancelled').length;
         const upcomingCount = all.filter(b => isoDate(new Date(b.bookingDate)) >= todayStr && b.status !== 'cancelled').length;
