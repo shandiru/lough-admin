@@ -79,7 +79,6 @@ export default function RescheduleReviewModal({ booking, staffList = [], onClose
 
   // Cancel-specific
   const [refundAmount,  setRefundAmount]  = useState('');
-  const [refundKey,     setRefundKey]     = useState('');
   const maxRefund = (booking.paidAmount / 100).toFixed(2);
   const hasStripe = !!booking.stripePaymentIntentId;
 
@@ -128,7 +127,6 @@ export default function RescheduleReviewModal({ booking, staffList = [], onClose
 
       if (action === 'cancel') {
         if (refundAmount) payload.refundAmount = Math.round(parseFloat(refundAmount) * 100);
-        payload.refundKey = refundKey;
       }
 
       await reviewRescheduleRequest(booking._id, payload);
@@ -338,15 +336,6 @@ export default function RescheduleReviewModal({ booking, staffList = [], onClose
                         className={INPUT_CLS + ' pl-7'}/>
                     </div>
                   </div>
-                  {parseFloat(refundAmount) > 0 && (
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">
-                        Refund Key (required)
-                      </label>
-                      <input type="password" value={refundKey} onChange={e => setRefundKey(e.target.value)}
-                        placeholder="Enter admin refund key" className={INPUT_CLS}/>
-                    </div>
-                  )}
                 </>
               ) : (
                 <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700 flex items-center gap-2">
