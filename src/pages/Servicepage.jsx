@@ -121,7 +121,7 @@ const ServicePage = () => {
   const tableHeaders = ['Service Name', 'Category', 'Duration', 'Price', 'Deposit', 'Gender', 'Status', 'Actions'];
 
   return (
-    <div className="flex min-h-screen bg-[#F5E6DA] transition-colors duration-500">
+    <div className="flex min-h-screen overflow-x-hidden bg-[#F5E6DA] transition-colors duration-500">
       <Toaster
         position="top-center"
         toastOptions={{
@@ -137,8 +137,8 @@ const ServicePage = () => {
       />
       <Sidebar />
 
-      <main className="flex-1 transition-all duration-300 ml-0 lg:ml-20 p-4 sm:p-6 md:p-8 lg:p-12 min-w-0">
-        <div className="max-w-7xl mx-auto">
+      <main className="ml-0 min-w-0 flex-1 overflow-x-hidden p-4 transition-all duration-300 sm:p-6 md:p-8 lg:ml-20 lg:p-12">
+        <div className="mx-auto max-w-7xl min-w-0">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 sm:mb-12">
             <div>
@@ -169,15 +169,25 @@ const ServicePage = () => {
           </div>
 
           {/* Table Card */}
-          <div className="bg-white/70 backdrop-blur-md rounded-[32px] shadow-2xl shadow-brand-soft/20 border-white overflow-hidden">
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse" style={{ minWidth: '900px' }}>
+          <div className="max-w-full overflow-hidden rounded-[32px] border border-white/70 bg-white/70 shadow-2xl shadow-brand-soft/20 backdrop-blur-md">
+            <div className="w-full max-w-full overflow-x-auto">
+              <table className="w-full table-fixed border-collapse text-left">
+                <colgroup>
+                  <col className="w-[16%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[15%]" />
+                </colgroup>
                 <thead className="bg-[#F5EDE4]/60 border-b border-brand-soft/20">
                   <tr>
                     {tableHeaders.map((h, i) => (
                       <th
                         key={h}
-                        className={`px-8 py-6 text-[10px] uppercase tracking-[3px] font-black text-gray-400 whitespace-nowrap ${
+                        className={`px-5 py-6 text-[10px] uppercase tracking-[3px] font-black text-gray-400 whitespace-nowrap ${
                           i === 5 || i === 6 ? 'text-center' : i === 7 ? 'text-right' : ''
                         }`}
                       >
